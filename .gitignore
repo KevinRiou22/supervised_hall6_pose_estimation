@@ -1,0 +1,6 @@
+out/
+err/
+checkpoint/
+log/
+visu/
+data/*
