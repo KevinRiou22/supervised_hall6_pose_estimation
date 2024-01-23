@@ -4,3 +4,4 @@ checkpoint/
 log/
 visu/
 data/*
+common/__pycache__/*

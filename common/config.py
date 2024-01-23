@@ -156,15 +156,23 @@ config.HALL6_DATA.SUBJECTS_TRAIN = ['S1','S2','S3','S4']
 config.HALL6_DATA.SUBJECTS_TEST = ['S5']
 config.HALL6_DATA.TRAIN_CAMERAS = [8, 9, 10, 11]
 config.HALL6_DATA.TEST_CAMERAS = [8, 9, 10, 11]
-config.HALL6_DATA.BONES = [[0,1],[1,2],[2,3],[0,4],[4,5],[5,6],[0,7],[7,8],[8,9],[9,10],[8,11],[11,12],[12, 13], [8, 14],[14, 15], [15, 16]]
-#config.HALL6_DATA.BONES_NAMES = ['RightHalfHip', 'RightThigh', 'RightShin', 'LeftHalfHip', 'LeftThigh', 'LeftShin', 'SpineHip', 'SpineThorax', 'Neck', 'Head', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'RightShoulder', 'RightArm', 'RightForeArm']
-config.HALL6_DATA.BONES_NAMES = ['RightHalfHip', 'RightThigh', 'RightShin', 'LeftHalfHip', 'LeftThigh', 'LeftShin', 'SpineHip', 'SpineThorax', 'Neck', 'Head', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'RightShoulder', 'RightArm', 'RightForeArm']
+#config.HALL6_DATA.BONES = [[0,1],[1,2],[2,3],[0,4],[4,5],[5,6],[0,7],[7,8],[8,9],[9,10],[8,11],[11,12],[12, 13], [8, 14],[14, 15], [15, 16]]
+config.HALL6_DATA.BONES = [[11, 12], [12, 14], [14, 16], [11, 13], [13, 15], [5, 7], [7, 9], [6, 8], [8, 10]]
 
-config.HALL6_DATA.BONES_FLAG = ['m', 'r', 'r', 'm', 'l', 'l', 'm', 'm', 'm', 'm', 'm', 'l', 'l', 'm', 'r', 'r']
+#config.HALL6_DATA.BONES_NAMES = ['RightHalfHip', 'RightThigh', 'RightShin', 'LeftHalfHip', 'LeftThigh', 'LeftShin', 'SpineHip', 'SpineThorax', 'Neck', 'Head', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'RightShoulder', 'RightArm', 'RightForeArm']
+config.HALL6_DATA.BONES_NAMES = ['Hip', 'RightThigh', 'RightShin', 'LeftThigh', 'LeftShin',  'LeftArm', 'LeftForeArm', 'RightArm', 'RightForeArm']
+
+#config.HALL6_DATA.BONES_FLAG = ['m', 'r', 'r', 'm', 'l', 'l', 'm', 'm', 'm', 'm', 'm', 'l', 'l', 'm', 'r', 'r']
+config.HALL6_DATA.BONES_FLAG = ['m', 'r', 'r', 'l', 'l',  'l', 'l', 'r', 'r']
+
 config.HALL6_DATA.NUM_JOINTS = 17
-config.HALL6_DATA.JOINT_SYMMETRY = [[4, 5, 6, 11, 12, 13], [1, 2, 3, 14, 15, 16]]
+#config.HALL6_DATA.JOINT_SYMMETRY = [[4, 5, 6, 11, 12, 13], [1, 2, 3, 14, 15, 16]]
+config.HALL6_DATA.JOINT_SYMMETRY = [[2, 4,  6, 8, 10, 12, 14, 16], [1, 3, 5, 7, 9, 11, 13, 15]]
+
 config.HALL6_DATA.PROJ_Frm_3DCAM = False
-config.HALL6_DATA.BONES_SYMMETRY = [[1, 2, 14, 15], [4, 5, 11, 12]]
+#config.HALL6_DATA.BONES_SYMMETRY = [[1, 2, 14, 15], [4, 5, 11, 12]]
+config.HALL6_DATA.BONES_SYMMETRY = [[1, 2, 5, 6], [3, 4, 7, 8]]
+
 config.HALL6_DATA.TASKS_TRAIN=['Directions', 'Discussion', 'Eating', 'Greeting', 'Phoning', 'Photo', 'Posing', 'Purchases', 'Sitting','SittingDown', 'Smoking', 'Waiting', 'WalkDog', 'WalkTogether', 'Walking']
 config.HALL6_DATA.TASKS_TEST=['Directions', 'Discussion', 'Eating', 'Greeting', 'Phoning', 'Photo', 'Posing', 'Purchases', 'Sitting','SittingDown', 'Smoking', 'Waiting', 'WalkDog', 'WalkTogether', 'Walking']
 

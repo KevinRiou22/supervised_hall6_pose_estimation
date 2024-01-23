@@ -13,7 +13,7 @@ operators = [1, 2, 3, 4, 5]
 tasks= [0, 1, 2, 3]
 examples = list(range(1, 31))
 
-my_data_pth = path_dataset+"triangulated_3D_with_distor.npz"#'hall6.npz' ####one example:t1_o1_ex7
+my_data_pth = path_dataset+"triangulated_3D_with_distor_2D_structure.npz"#'hall6.npz' ####one example:t1_o1_ex7
 data_npy = np.load(my_data_pth, allow_pickle=True)
 data_npy = dict(data_npy)
 
@@ -106,6 +106,10 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
             axs_3D = figs_3D[-1].add_subplot(projection='3d')
             axs_3D.scatter(x_out, y_out, z_out, marker='+', color='g', label="pred 3D")
             #axs_3D.set_box_aspect((np.ptp(x_out), np.ptp(y_out), np.ptp(z_out)))
+            #set all axis limits to [-4, 4]
+            axs_3D.set_xlim3d([-1, 1])
+            axs_3D.set_ylim3d([-1, 1])
+            axs_3D.set_zlim3d([3, 5])
 
             i += 1
         plt.legend()

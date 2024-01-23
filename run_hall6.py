@@ -67,7 +67,7 @@ operators = [1, 2, 3, 4, 5]
 tasks= [0, 1, 2, 3]
 examples = list(range(1, 31))
 
-my_data_pth = path_dataset+"triangulated_3D_with_distor.npz"#'hall6.npz' ####one example:t1_o1_ex7
+my_data_pth = path_dataset+"triangulated_3D_with_distor_2D_structure.npz"#'hall6.npz' ####one example:t1_o1_ex7
 my_data = np.load(my_data_pth, allow_pickle=True)
 my_data = dict(my_data)
 actions = []
@@ -307,7 +307,7 @@ if True:
     import json
 
     #f = open('bone_priors_mean.json', )
-    f = open('data/bones_length_hall6.json', )
+    f = open('data/bones_length_hall6_2d_pose_structure.json', )
     gt_bones_lens = json.load(f)
     bone_names_h36m = cfg.HALL6_DATA.BONES_NAMES
     bones_h36m = cfg.HALL6_DATA.BONES
@@ -542,11 +542,15 @@ if True:
                 eval_start_time = time.time()
             for t_len in cfg.TEST.NUM_FRAMES:
                 epoch_loss_valid = 0
+                epoch_bone_valid = 0
                 action_mpjpe = {}
+                action_bone_error = {}
                 for act in actions:
                     action_mpjpe[act] = [0] * NUM_VIEW
+                    action_bone_error[act] = [0] * NUM_VIEW
                     for i in range(NUM_VIEW):
                         action_mpjpe[act][i] = [0] * (NUM_VIEW + 1)
+                        action_bone_error[act][i] = [0] * (NUM_VIEW + 1)
                 N = [0] * NUM_VIEW
                 for i in range(NUM_VIEW):
                     N[i] = [0] * (NUM_VIEW + 1)
@@ -608,8 +612,7 @@ if True:
                                             loss_view_tmp = eval_metrc(cfg, trj_3d[..., idx],
                                                                        inputs_3d_gt[..., view_idx])
                                             loss += loss_view_tmp.item()
-                                            action_mpjpe[act][num_view - 1][view_idx] += loss_view_tmp.item() * \
-                                                                                         inputs_3d_gt.shape[0]
+                                            action_mpjpe[act][num_view - 1][view_idx] += loss_view_tmp.item() *inputs_3d_gt.shape[0]
 
                                         action_mpjpe[act][num_view - 1][-1] += loss * inputs_3d_gt.shape[0]
                                         continue
@@ -663,7 +666,7 @@ if True:
                                         out_align[:, :, 0] = 0
                                         out = out_align
 
-                                    loss = 0
+                                    
                                     # if idx_eval == 0:
                                     #     for idx_, view_idx in enumerate(views_idx):
                                     #         fig = plt.figure("view_2d_" + str(idx_) + "_epoch_" + str(epoch))
@@ -688,13 +691,18 @@ if True:
                                     #         plt.savefig("view " + str(v))
                                     #     plt.show()
                                     idx_eval +=1
-
+                                    loss = 0
+                                    bone_loss = 0
                                     for idx_, view_idx in enumerate(views_idx):
                                         loss_view_tmp = eval_metrc(cfg, out[..., idx_], inputs_3d_gt[..., view_idx])
+                                        bone_pred_len = bone_losses(out[..., idx_:idx_+1].permute((0,1,4,2,3)).contiguous(), bones.cpu(), cfg.HALL6_DATA.SUBJECTS_TEST, batch_subjects=sub_action, cfg=cfg)[0]
+                                        bone_error = torch.mean(torch.abs(torch.squeeze(bone_pred_len)-bones_means.cpu()))
                                         loss += loss_view_tmp.item()
+                                        bone_loss += bone_error.item()
                                         action_mpjpe[act][num_view - 1][idx_] += loss_view_tmp.item() * inputs_3d_gt.shape[0]
-
+                                        action_bone_error[act][num_view - 1][idx_] += bone_error.item() * inputs_3d_gt.shape[0]
                                     action_mpjpe[act][num_view - 1][-1] += loss * inputs_3d_gt.shape[0]
+                                    action_bone_error[act][num_view - 1][-1] += bone_loss * inputs_3d_gt.shape[0]
                                 """if cfg.TRAIN.PREDICT_ROOT:
                                     if id_traj == 0:
                                         absolute_path_gt = torch.cat(absolute_path_gt, dim=0).detach().cpu().numpy()
@@ -702,6 +710,40 @@ if True:
                                         np.save(args.visu_path+"/absolute_path_pred" + "_epoch_" + str(epoch), absolute_path_pred)
                                         np.save(args.visu_path+"/absolute_path_gt" + "_epoch_" + str(epoch), absolute_path_gt)
                                     id_traj += 1"""
+                                
+                for num_view in cfg.TEST.NUM_VIEWS:
+                    tmp = [0] * (NUM_VIEW + 1)
+                    print('num_view:{}'.format(num_view))
+                    for act in action_bone_error:
+                        if action_frames[act] > 0:
+                            for i in range(NUM_VIEW):
+                                action_bone_error[act][num_view - 1][i] /= (action_frames[act] * N[num_view - 1][i])
+                            action_bone_error[act][num_view - 1][-1] /= (action_frames[act] * N[num_view - 1][-1] * num_view)
+                            print('bone err of {:18}'.format(act), end=' ')
+                            for i in range(NUM_VIEW):
+                                print('view_{}: {:.3f}'.format(cfg.HALL6_DATA.TEST_CAMERAS[i],
+                                                               action_bone_error[act][num_view - 1][i] * 1000), end='    ')
+                                tmp[i] += action_bone_error[act][num_view - 1][i] * 1000
+                            print('avg_action: {:.3f}'.format(action_bone_error[act][num_view - 1][-1] * 1000))
+                            tmp[-1] += action_bone_error[act][num_view - 1][-1] * 1000
+                    print('avg:', end='                        ')
+                    for i in range(NUM_VIEW):
+                        print('view_{}: {:.3f}'.format(i, tmp[i] / len(action_frames)), end='    ')
+                        summary_writer.add_scalar(
+                            "test_bone_err_t{}_n_view_{}_view_{}/epoch".format(t_len, num_view, i),
+                            tmp[i] / len(action_frames), epoch)
+                    print('avg_all   : {:.3f}'.format(tmp[-1] / len(action_frames)))
+
+                    if summary_writer is not None:
+                        summary_writer.add_scalar("test_bone_err_t{}_v{}/epoch".format(t_len, num_view),
+                                                  tmp[-1] / len(action_frames), epoch)
+                    epoch_bone_valid += tmp[-1] / len(action_frames)
+                epoch_bone_valid /= len(cfg.TEST.NUM_VIEWS)
+                print('t_len:{} avg:{:.3f}'.format(t_len, epoch_bone_valid))
+                if summary_writer is not None:
+                    summary_writer.add_scalar("epoch_bone_valid/epoch", epoch_bone_valid, epoch)
+                    
+                    
                 print('num_actions :{}'.format(len(action_frames)))
                 for num_view in cfg.TEST.NUM_VIEWS:
                     tmp = [0] * (NUM_VIEW + 1)
@@ -734,6 +776,8 @@ if True:
                 print('t_len:{} avg:{:.3f}'.format(t_len, epoch_loss_valid))
                 if summary_writer is not None:
                     summary_writer.add_scalar("epoch_loss_valid/epoch", epoch_loss_valid, epoch)
+                    
+            
 
             if EVAL:
                 eval_elapsed = (time.time() - eval_start_time) / 60

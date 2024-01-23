@@ -15,7 +15,7 @@ operators = [1, 2, 3, 4, 5]
 tasks= [0, 1, 2, 3]
 examples = list(range(1, 31))
 
-my_data_pth = path_dataset+"triangulated_3D_with_distor.npz"#'hall6.npz' ####one example:t1_o1_ex7
+my_data_pth = path_dataset+"triangulated_3D_with_distor_2D_structure.npz"#'hall6.npz' ####one example:t1_o1_ex7
 data_npy = np.load(my_data_pth, allow_pickle=True)
 data_npy = dict(data_npy)
 
@@ -27,7 +27,7 @@ params = json.load(f)
 cams = params['cams_order'] #os.listdir('data/images/task{}/operator{}/example{}'.format(k_a[0], operator_str, k_a[1]))
 frame = 0
 
-f = open('data/bones_length_hall6.json', )
+f = open('data/bones_length_hall6_2d_pose_structure.json', )
 gt_bones_lens = json.load(f)
 bone_names_h36m = cfg.HALL6_DATA.BONES_NAMES
 bones_h36m = cfg.HALL6_DATA.BONES
@@ -38,6 +38,7 @@ symmetry_bones = [[],[]]
 bone_names_in_bones_list = []
 for sub_id in gt_bones_lens.keys():
     sub_processed = gt_bones_lens[sub_id]['h36m']
+    print(sub_processed)
     bone_id = 0
     bones_means_.append([])
     bone_id_in_bones_list = 0
@@ -47,6 +48,7 @@ for sub_id in gt_bones_lens.keys():
             continue
         if bone_name in sub_processed.keys():
             bones_means_[-1].append(sub_processed[bone_name]/100)
+
             if count_subj == 0:
                 bones.append(bones_h36m[bone_id])
                 bone_names_in_bones_list.append(bone_name)

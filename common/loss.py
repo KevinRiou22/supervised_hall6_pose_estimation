@@ -670,6 +670,7 @@ def bone_losses(out, bones, subjects_, batch_subjects=None, cfg=None, eval=False
             # print(op)
             # input()
             op_out = out[np.where((np.array(batch_subjects)[:, 0])==op)]
+
             if op_out.shape[0]>0:
                 op_bones_lens = torch.norm(op_out[:, :, :, bones[:, 0]] - op_out[:, :, :, bones[:, 1]], dim=len(op_out.shape) - 1)
                 op_bones_lens_maxed = torch.minimum(op_bones_lens, torch.ones_like(op_bones_lens))

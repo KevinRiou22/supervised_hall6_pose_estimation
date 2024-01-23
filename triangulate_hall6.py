@@ -115,12 +115,12 @@ for sub in operators:
                 for id, i in enumerate(cfg.HALL6_DATA.TRAIN_CAMERAS):
                     print('Processing view {}......'.format(i))
                     print(keypoints_new['S{}'.format(sub)].keys())
-                    keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,0,:] = (keypoints['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,11,:] + keypoints['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,12,:])/2
-                    keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,8,:] = (keypoints['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,5,:] + keypoints['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,6,:])/2
-                    keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,7,:] = (keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,0,:] + keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,8,:])/2
-                    keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,10,:] = (keypoints['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,3,:] + keypoints['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,4,:])/2
-                    keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,9,:] = (keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,8,:] + keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,10,:])/2
-                    keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,[1, 2, 3, 4, 5, 6, 11, 12, 13, 14, 15, 16],:] = keypoints['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,[12, 14, 16, 11, 13, 15, 5, 7, 9, 6, 8, 10],:]
+                    #keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,0,:] = (keypoints['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,11,:] + keypoints['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,12,:])/2
+                    #keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,8,:] = (keypoints['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,5,:] + keypoints['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,6,:])/2
+                    #keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,7,:] = (keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,0,:] + keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,8,:])/2
+                    #keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,10,:] = (keypoints['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,3,:] + keypoints['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,4,:])/2
+                    #keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,9,:] = (keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,8,:] + keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,10,:])/2
+                    #keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,[1, 2, 3, 4, 5, 6, 11, 12, 13, 14, 15, 16],:] = keypoints['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i][:,[12, 14, 16, 11, 13, 15, 5, 7, 9, 6, 8, 10],:]
                 actions.append('task{}_example{}'.format(task, example))
                 n_frame_current_ex = keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i].shape[0]
                 N_frame_action_dict[n_frame_current_ex]='task{}_example{}'.format(task, example)
@@ -291,7 +291,7 @@ if True:
         for action in data_npy[subject].keys():
             for v in view_list:
                 data_npy[subject][action][v] = torch.stack(data_npy[subject][action][v], dim=0).numpy()
-    np.savez(path_dataset + '/triangulated_3D_with_distor.npz', **data_npy)
+    np.savez(path_dataset + '/triangulated_3D_with_distor_2D_structure.npz', **data_npy)
     # np.save(path_dataset + '/2d_from_triangulated_3D.npy', data_npy_2d_from_3d)
     # np.save(path_dataset + '/2d_pred.npy', data_npy_2d_gt)
 
