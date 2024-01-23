@@ -45,7 +45,8 @@ TRAIN:
   SET_COORD_SYS_IN_CAM: True
 HALL6_DATA:
   PROJ_Frm_3DCAM: False
-  TRAIN_CAMERAS: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-  TEST_CAMERAS: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+  TRAIN_CAMERAS: [12, 13, 14, 15]
+  TEST_CAMERAS: [12, 13, 14, 15]
+  SUBJECTS_TRAIN: ['S1','S2','S3','S4','S5']
 DATA:
   USE_GT_2D: False

@@ -39,7 +39,7 @@ set_seed()
 os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(cfg.GPU)
 args = parse_args()
 # dataset_path = '../MHFormer/dataset/data_3d_h36m.npz'
-dataset_path = "./data/data_3d_h36m.npz"
+#dataset_path = "./data/data_3d_h36m.npz"
 
 print('parsing args!')
 
@@ -269,7 +269,7 @@ if True:
                 data_npy[subject][action] = []
                 for v in range(len(view_list)):
                     data_npy[subject][action].append([])
-            for v in view_list:
+            for v in range(len(view_list)):
                 # print(pose_2D_from3D_gt.shape)
                 curr_data=torch.cat([pose_2D_from3D_gt[i, 0,:,:,v].cpu(), inp[:, :, :, :2, :][i, pad,:,:,v].cpu(), prj_2dpre_to_3d[i, 0,:,:,v].cpu(), inp[:, :, :, -1:, :][i, pad,:,:,v].cpu()], dim=-1)
                 data_npy[subject][action][v].append(curr_data)
@@ -289,9 +289,9 @@ if True:
     print(view_list)
     for subject in data_npy.keys():
         for action in data_npy[subject].keys():
-            for v in view_list:
+            for v in range(len(view_list)):
                 data_npy[subject][action][v] = torch.stack(data_npy[subject][action][v], dim=0).numpy()
-    np.savez(path_dataset + '/triangulated_3D_with_distor_2D_structure.npz', **data_npy)
+    np.savez(path_dataset + '/'+args.triang_out_name+".npz", **data_npy)
     # np.save(path_dataset + '/2d_from_triangulated_3D.npy', data_npy_2d_from_3d)
     # np.save(path_dataset + '/2d_pred.npy', data_npy_2d_gt)
 

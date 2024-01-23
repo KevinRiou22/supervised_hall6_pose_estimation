@@ -38,6 +38,9 @@ def parse_args():
     parser.add_argument('--vis_debug', action='store_true', help='save vis fig')
     parser.add_argument('--vis_grad', action='store_true', help='')
     parser.add_argument('--vis_dataset', help="Specify the name of the vis datast", default='h36m')
+
+    parser.add_argument('--triang_out_name', default='triangulated_3D_16_cams')
+    parser.add_argument('--data_name', default='triangulated_3D_16_cams')
     print("ARGS INITIALIZED")
     parser.set_defaults(align_r=True)
     parser.set_defaults(align_t=True)

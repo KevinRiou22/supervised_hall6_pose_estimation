@@ -66,8 +66,8 @@ path_meta_data = "./data/"
 operators = [1, 2, 3, 4, 5]
 tasks= [0, 1, 2, 3]
 examples = list(range(1, 31))
-
-my_data_pth = path_dataset+"triangulated_3D_with_distor_2D_structure.npz"#'hall6.npz' ####one example:t1_o1_ex7
+my_data_pth = path_dataset+args.data_name+".npz"
+#my_data_pth = path_dataset+"triangulated_3D_with_distor_2D_structure.npz"#'hall6.npz' ####one example:t1_o1_ex7
 my_data = np.load(my_data_pth, allow_pickle=True)
 my_data = dict(my_data)
 actions = []
