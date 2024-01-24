@@ -18,8 +18,8 @@ config.DEBUG = False
 # Train
 config.TRAIN = edict()
 config.TRAIN.NUM_AUGMENT_VIEWS = 0
-config.TRAIN.NUM_EPOCHES = 600
-config.TRAIN.BATCH_SIZE = 720
+config.TRAIN.NUM_EPOCHES = 60
+config.TRAIN.BATCH_SIZE = 360
 config.TRAIN.LEARNING_RATE = 0.001#0.001
 config.TRAIN.LR_DECAY = 0.99#0.95
 config.TRAIN.CHECKPOINT = ""
@@ -129,7 +129,7 @@ config.NETWORK.T_FORMER.NUM_CHANNELS = 512
 # DATA
 config.DATA = edict()
 config.DATA.USE_GT_2D = True
-config.DATA.DATASET_NAME = "h36m"
+config.DATA.DATASET_NAME = "hall6"
 
 ### H36M Data
 config.H36M_DATA = edict()
@@ -143,7 +143,7 @@ config.H36M_DATA.BONES = [[0,1],[1,2],[2,3],[0,4],[4,5],[5,6],[0,7],[7,8],[8,9],
 config.H36M_DATA.BONES_FLAG = ['m', 'r', 'r', 'm', 'l', 'l', 'm', 'm', 'm', 'm', 'm', 'l', 'l', 'm', 'r', 'r']
 config.H36M_DATA.NUM_JOINTS = 17
 config.H36M_DATA.JOINT_SYMMETRY = [[4, 5, 6, 11, 12, 13], [1, 2, 3, 14, 15, 16]]
-config.H36M_DATA.PROJ_Frm_3DCAM = False
+config.H36M_DATA.PROJ_Frm_3DCAM = True
 config.H36M_DATA.BONES_SYMMETRY = [[1, 2, 14, 15], [4, 5, 11, 12]]
 config.H36M_DATA.TASKS_TRAIN=['Directions', 'Discussion', 'Eating', 'Greeting', 'Phoning', 'Photo', 'Posing', 'Purchases', 'Sitting','SittingDown', 'Smoking', 'Waiting', 'WalkDog', 'WalkTogether', 'Walking']
 config.H36M_DATA.TASKS_TEST=['Directions', 'Discussion', 'Eating', 'Greeting', 'Phoning', 'Photo', 'Posing', 'Purchases', 'Sitting','SittingDown', 'Smoking', 'Waiting', 'WalkDog', 'WalkTogether', 'Walking']
