@@ -85,12 +85,13 @@ cfg.HALL6_DATA.BONES_SYMMETRY = symmetry_bones
 print("bone_names_in_bones_list : " + str(bone_names_in_bones_list))
 print("cfg.HALL6_DATA.BONES_SYMMETRY : " + str(cfg.HALL6_DATA.BONES_SYMMETRY))
 torch.from_numpy(np.array(bones_means_))#.cuda()
-bones_means = torch.from_numpy(np.mean(np.array(bones_means_), axis=(0)))#.cuda()
+bones_means = torch.from_numpy(np.array(bones_means_))#.cuda()
 bones = torch.from_numpy(np.array(bones))#.cuda()
 print("bones_means : " + str(bones_means))
 print("bones : " + str(bones))
 bones_stds = torch.from_numpy(np.std(np.array(bones_means_), axis=(0)))#.cuda()
-
+bones_means = torch.from_numpy(np.load("data/bones_length_hall6_triang_measure.npy")) # .cuda()
+#bones_stds = torch.std(torch.from_numpy(np.load("data/bones_length_hall6_triang_measure.npy")), axis=0)
 
 #enumerate data_npy, keys and values
 reprojection_errors_subjects = [[] for i in range(5)]
@@ -135,7 +136,7 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
             # print("bones_means : " + str(bones_means))
             # input()
 
-            bones_err = torch.abs(torch.squeeze(pred_bone_mean)-bones_means).detach().cpu().numpy()
+            bones_err = torch.abs(torch.squeeze(pred_bone_mean)-bones_means[i]).detach().cpu().numpy()
             bones_3D_errors_examples[-1][-1].append(bones_err)
             reproj_error = mpjpe(poses_2D_hrnet, poses_2D_reprojection)
             reproj_error = reproj_error.detach().cpu().numpy()

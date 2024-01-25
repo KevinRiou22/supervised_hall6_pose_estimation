@@ -724,17 +724,21 @@ def bone_len_loss(bone_priors, out, bones, subjects_, batch_subjects=None, cfg=N
         # input()
         op_out = out[np.where((np.array(batch_subjects)[:, 0]) == op)]
         # print(op_out.shape)
+        #print(op)
         if op_out.shape[0] > 0:
             op_bones_lens = torch.norm(op_out[:, :, :, bones[:, 0]] - op_out[:, :, :, bones[:, 1]], dim=len(op_out.shape) - 1)
-            prior_len = torch.reshape(bone_priors[op], (1, 1, 1, bones.shape[0])).repeat(op_out.shape[:-2]+(1,))
+            prior_len = torch.reshape(bone_priors[op].to(op_bones_lens.device), (1, 1, 1, bones.shape[0])).repeat(op_out.shape[:-2]+(1,))
+            #print(prior_len[0, 0, 0])
+            #print(op_bones_lens[0, 0, 0])
             #prior_len = torch.unsqueeze(prior_len, -1)
             #op_bones_lens = torch.unsqueeze(op_bones_lens, -1)
             #loss.append(torch.unsqueeze(mpjpe(prior_len.to(out.device), op_bones_lens), 0))
-            mse = torch.square(prior_len.to(out.device) - op_bones_lens)
-            mse = torch.minimum(mse, torch.ones_like(mse))
+            mse=torch.norm(torch.unsqueeze(prior_len.to(out.device), -1) - torch.unsqueeze(op_bones_lens, -1), dim=-1)
+            #mse = torch.square(prior_len.to(out.device) - op_bones_lens)
+            #mse = torch.minimum(mse, torch.ones_like(mse))
             std_bones_len_prior_ = std_bones_len_prior.repeat(mse.shape[:3] + (1,))
-            loss.append((1 / (2 * std_bones_len_prior_))*mse)
-            #loss.append(torch.sqrt(torch.abs(prior_len.to(out.device)-op_bones_lens)))
+            #loss.append((1 / (2 * std_bones_len_prior_))*mse)
+            loss.append(mse)
     return torch.mean(torch.cat(loss))
 
 def get_bones_lens(bone_priors_mean, bone_priors_std, out, bones, subjects_, batch_subjects=None, cfg=None, eval=False):

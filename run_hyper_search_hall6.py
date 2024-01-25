@@ -113,13 +113,14 @@ def objective(trial):
     actions = []
     N_frame_action_dict = {}
     for sub in operators:
-        keypoints['S{}'.format(sub)] = my_data['S1'].item()
+        keypoints['S{}'.format(sub)] = my_data['S{}'.format(sub)].item()
+        print("subject {} is processing".format(sub))
         ############ coco to h36m ######################
-        keypoints_new['S{}'.format(sub)] = copy.deepcopy(my_data['S1'].item())
+        keypoints_new['S{}'.format(sub)] = copy.deepcopy(my_data['S{}'.format(sub)].item())
         #remove [S4][task1_example6] and [S4][task3_example6] from keypoints_new dict
-        if sub == 4:
-            keypoints_new['S{}'.format(sub)].pop('task1_example6')
-            keypoints_new['S{}'.format(sub)].pop('task3_example6')
+
+
+
 
 
         t_i=0
