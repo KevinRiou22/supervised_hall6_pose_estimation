@@ -1,0 +1,49 @@
+for i in {1..7}
+do
+    rm baseline$i/cfg.yaml
+    rm bench$i/cfg.yaml
+done
+
+
+for i in {1..7}
+do
+    cp bench$i/cfg.yaml bench$i/absolute/cfg.yaml
+    cp bench$i/cfg.yaml bench$i/relative/cfg.yaml
+    sed -i 's/  PREDICT_ROOT: True/  PREDICT_ROOT: False/g' bench$i/relative/cfg.yaml
+done
+
+for i in {3..5}
+do
+    cp baseline$i/cfg.yaml baseline$i/absolute/cfg.yaml
+    cp baseline$i/cfg.yaml baseline$i/relative/cfg.yaml
+    sed -i 's/  PREDICT_ROOT: True/  PREDICT_ROOT: False/g' baseline$i/relative/cfg.yaml
+done
+
+
+for i in {1..7}
+do
+    cp s_baseline$i baseline$i/absolute/slurm_cmd
+    cp s_baseline$i baseline$i/relative/slurm_cmd
+    sed -i "s|baseline$i/|baseline$i/absolute/|g" baseline$i/absolute/slurm_cmd
+    sed -i "s|baseline$i/|baseline$i/relative/|g" baseline$i/relative/slurm_cmd
+done
+
+
+for i in {1..7}
+do
+    cp s_bench$i bench$i/absolute/slurm_cmd
+    cp s_bench$i bench$i/relative/slurm_cmd
+    sed -i "s|bench$i/|bench$i/absolute/|g" bench$i/absolute/slurm_cmd
+    sed -i "s|bench$i/|bench$i/relative/|g" bench$i/relative/slurm_cmd
+done
+
+for i in {1..7}
+do
+    sed -i "s|bench$i/|bench$i/relative/|g" create_expe_dirs.sh
+done
+
+for i in {1..7}
+do
+    sed -i "s|baseline$i/|baseline$i/relative/|g" create_expe_dirs.sh
+done
+

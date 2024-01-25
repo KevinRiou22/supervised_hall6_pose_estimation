@@ -40,6 +40,16 @@ params = json.load(f)
 cams = params['cams_order'] #os.listdir('data/images/task{}/operator{}/example{}'.format(k_a[0], operator_str, k_a[1]))
 frame = 0
 
+f = open('data/cams_params_all_examples.json', )
+
+params = json.load(f)
+# params = dict(params)
+#print(params)
+cameras_intrinsic_params = params['h36m_cameras_intrinsic_params']
+resolutions={}
+for cam_dict in cameras_intrinsic_params:
+    resolutions[cam_dict['id']] = [cam_dict['res_w'], cam_dict['res_h']]
+
 f = open('data/bones_length_hall6_2d_pose_structure.json', )
 gt_bones_lens = json.load(f)
 bone_names_h36m = cfg.HALL6_DATA.BONES_NAMES
@@ -61,7 +71,6 @@ for sub_id in gt_bones_lens.keys():
             continue
         if bone_name in sub_processed.keys():
             bones_means_[-1].append(sub_processed[bone_name]/100)
-
             if count_subj == 0:
                 bones.append(bones_h36m[bone_id])
                 bone_names_in_bones_list.append(bone_name)
@@ -92,6 +101,7 @@ bone_3D_std_examples = []
 reprojection_errors_examples = []
 bones_3D_errors_examples = []
 
+
 for i, (k_s, v_s) in enumerate(data_npy.items()):
     print(k_s)
     bone_3D_std_examples.append([])
@@ -109,11 +119,16 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
         reprojection_errors_examples[-1].append([])
         bone_3D_std_examples[-1].append([])
         bones_3D_errors_examples[-1].append([])
-        for v in range(len(v_a)):
-            poses_2D_hrnet = (torch.from_numpy(v_a[v][:,:, 2:4])+1)/2 #frame, joints, (x,y)
-            poses_2D_reprojection =  (torch.from_numpy(v_a[v][:,:, 0:2])+1)/2 #frame, joints, (x,y)
-            poses_3D = torch.unsqueeze(torch.unsqueeze(torch.from_numpy(v_a[v][: ,:, 4:7]), 0), -1) #frame, joints, (x,y,z)
-            confidences = v_a[v][: ,:, 7] #frame, joints, 1
+        for idx, view_idx in enumerate(cfg.HALL6_DATA.TEST_CAMERAS):
+            cam_resolution = resolutions[cfg.HALL6_DATA.CAMERAS_IDS[view_idx]]
+            poses_2D_hrnet = (torch.from_numpy(v_a[idx][:,:, 2:4])+1)/2#frame, joints, (x,y)
+            poses_2D_hrnet[:,:, 0] = poses_2D_hrnet[:,:, 0]*cam_resolution[0]
+            poses_2D_hrnet[:,:, 1] = poses_2D_hrnet[:,:, 1]*cam_resolution[1]
+            poses_2D_reprojection =  (torch.from_numpy(v_a[idx][:,:, 0:2])+1)/2 #frame, joints, (x,y)
+            poses_2D_reprojection[:,:, 0] = poses_2D_reprojection[:,:, 0]*cam_resolution[0]
+            poses_2D_reprojection[:,:, 1] = poses_2D_reprojection[:,:, 1]*cam_resolution[1]
+            poses_3D = torch.unsqueeze(torch.unsqueeze(torch.from_numpy(v_a[idx][: ,:, 4:7]), 0), -1) #frame, joints, (x,y,z)
+            confidences = v_a[idx][: ,:, 7] #frame, joints, 1
             sub_action = [[k_s, k_a]]
             pred_bone_mean, pred_bone_std = bone_losses(poses_3D.permute(0, 1, 4, 2, 3).contiguous()[:, :, :], bones, cfg.HALL6_DATA.SUBJECTS_TRAIN, batch_subjects=sub_action, cfg=cfg)
             # print("pred_bone_mean : " + str(pred_bone_mean))
@@ -124,7 +139,7 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
             bones_3D_errors_examples[-1][-1].append(bones_err)
             reproj_error = mpjpe(poses_2D_hrnet, poses_2D_reprojection)
             reproj_error = reproj_error.detach().cpu().numpy()
-            reprojection_errors_views[v].append(reproj_error)
+            reprojection_errors_views[idx].append(reproj_error)
             reprojection_errors_subjects[i].append(reproj_error)
             reprojection_errors_examples[-1][-1].append(reproj_error)
             # print(pred_bone_std.shape)
@@ -139,8 +154,8 @@ for i in range(len(bone_3D_std_examples)):
     #print(np.array(bone_3D_std_examples[i]).shape)
     #plt.figure("std_errors_examples subject {}".format(i))
     #plt.bar(np.arange(len(bone_3D_std_examples[i])), np.mean(np.array(bone_3D_std_examples[i]), axis=(1,2)))
-    #plt.figure("reprojection_errors_examples subject {}".format(i))
-    #plt.bar(np.arange(len(reprojection_errors_examples[i])), np.min(np.array(reprojection_errors_examples[i]), axis=1))
+    plt.figure("reprojection_errors_examples subject {}".format(i))
+    plt.bar(np.arange(len(reprojection_errors_examples[i])), np.min(np.array(reprojection_errors_examples[i]), axis=1))
     plt.figure("bones_3D_errors_examples subject {}".format(i))
     bottom = 0
     for j in range(len(bones_means)):
@@ -153,13 +168,13 @@ for i in range(len(bone_3D_std_examples)):
     # set x axis name
     plt.xlabel("Tasks")
 
-    print("mean bone error subject {}".format(i), np.mean(np.array(bones_3D_errors_examples[i])))
-    print("mean reproj. error subject {}".format(i), np.mean(np.min(np.array(reprojection_errors_examples[i]))))
+    print("mean bone error subject {} : {} mm".format(i, np.mean(np.array(bones_3D_errors_examples[i]))*1000))
+    print("mean reproj. error subject {} : {} px".format(i, np.mean(np.min(np.array(reprojection_errors_examples[i])))))
     to_print_bone.append("{:.1f}".format(np.mean(np.array(bones_3D_errors_examples[i]))*1000))
     to_print_reproj.append("{:.1f}".format(np.mean(np.min(np.array(reprojection_errors_examples[i])))))
     avg_repr_error.append(np.mean(np.min(np.array(reprojection_errors_examples[i]))))
 avg_repr_error = np.mean(np.array(avg_repr_error))
-print("avg_repr_error : " + str(avg_repr_error))
+print("avg_repr_error : " + str(avg_repr_error)+ " px")
 to_print_reproj.append("{:.1f}".format(avg_repr_error))
 
 plt.figure("bones_3D_errors_examples all subjects")
@@ -185,7 +200,7 @@ for j in range(len(bones_means)):
 plt.ylabel("3D bone error (mm)", fontweight='bold', fontsize=18)
 # set x axis name
 plt.xlabel("Tasks", fontweight='bold', fontsize=18)
-print('mean bone len error all subjects', np.mean(np.array(bar_data)))
+print('mean bone len error all subjects {} mm'.format(np.mean(np.array(bar_data))*1000))
 to_print_bone.append("{:.1f}".format(np.mean(np.array(bar_data))*1000))
 #print(np.array(reprojection_errors_examples).shape)
 #print(np.min(np.array(reprojection_errors_examples), axis=1))

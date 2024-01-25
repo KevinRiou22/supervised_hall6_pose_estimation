@@ -154,6 +154,7 @@ config.HALL6_DATA.ROOT_DIR = '/home/wulele/DataSet/Human36M/images'
 config.HALL6_DATA.P2D_DETECTOR = 'cpn' #('cpn', 'ada_fuse', 'gt')
 config.HALL6_DATA.SUBJECTS_TRAIN = ['S1','S2','S3','S4']
 config.HALL6_DATA.SUBJECTS_TEST = ['S5']
+config.HALL6_DATA.CAMERAS_IDS = ["16400310","17203018","17203019","17203020","17203025","17203026","17203031","17203035","l_10028260","l_10028261","l_10028262","l_10028263","r_10028260","r_10028261","r_10028262","r_10028263"]
 config.HALL6_DATA.TRAIN_CAMERAS = [8, 9, 10, 11]
 config.HALL6_DATA.TEST_CAMERAS = [8, 9, 10, 11]
 #config.HALL6_DATA.BONES = [[0,1],[1,2],[2,3],[0,4],[4,5],[5,6],[0,7],[7,8],[8,9],[9,10],[8,11],[11,12],[12, 13], [8, 14],[14, 15], [15, 16]]

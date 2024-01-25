@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=bench1          # nom du job
+#SBATCH --job-name=bench7          # nom du job
 # Il est possible d'utiliser une autre partition que celle par défaut
 # en activant l'une des 5 directives suivantes :
 ##SBATCH -C v100-16g                 # decommenter pour reserver uniquement des GPU V100 16 Go
@@ -22,8 +22,8 @@
 ##SBATCH --hint=nomultithread         # hyperthreading desactive
 #SBATCH --qos=qos_gpu-t4
 #SBATCH --time=4-00:00:00
-#SBATCH --output=out/submit/bench1/main/gpu_%j.out      # nom du fichier de sortie
-#SBATCH --error=err/submit/bench1/main/gpu_%j.err       # nom du fichier d'erreur (ici commun avec la sortie)
+#SBATCH --output=out/submit/bench7/relative/main/gpu_%j.out      # nom du fichier de sortie
+#SBATCH --error=err/submit/bench7/relative/main/gpu_%j.err       # nom du fichier d'erreur (ici commun avec la sortie)
 
 # Nettoyage des modules charges en interactif et herites par defaut
 module purge
@@ -36,5 +36,5 @@ module purge
 cd $WORK/Human_Pose_Estimation/supervised_hall6_pose_estimation
 module load pytorch-gpu/py3/1.13.0
 
-python run_hall6.py --cfg ./cfg/submit/bench1/cfg.yaml  --ckpt_path ./checkpoint/submit/bench1/main/ --log_path ./log/submit/bench1/main/  --visu_path ./visu/submit/bench1/main/
+python run_hall6.py --cfg ./cfg/submit/bench7/relative/cfg.yaml  --ckpt_path ./checkpoint/submit/bench7/relative/main/ --log_path ./log/submit/bench7/relative/main/  --visu_path ./visu/submit/bench7/relative/main/
 

@@ -19,57 +19,12 @@ Baseline 1
 
 ```
 
-Baseline 2
+Visualize the poses for the first example in the validation set, for epoch 0 :
 ```bash
-
+python visualize_poses.py --visu_path ./visu/submit/baseline1/absolute/main/ --visu_epoch 0
 ```
 
-Baseline 3
-```bash
-
-```
-
-Baseline 4
-```bash
-
-```
-
-Baseline 5
-```bash
-
-```
-
-Investiguation 1
-```bash
-
-```
-
-Investiguation 2
-```bash
-
-```
-
-Investiguation 3
-```bash
-
-```
-
-Investiguation 4
-```bash
-
-```
-
-Investiguation 5
-```bash
-
-```
-
-Investiguation 6
-```bash
-
-``` 
-
-Investiguation 7
-```bash
-
+Visualize the trajectory of the root, for the first example in the validation set, for epoch 0 (only for absolute pose estimators)) :
+```bash 
+python visualize_root_path.py --path ./visu/submit/baseline1/absolute/main/ --epoch 0
 ```

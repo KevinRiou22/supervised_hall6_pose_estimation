@@ -439,12 +439,15 @@ if True:
             else:
                 out = model(inp, rotation)
             out = out.permute(0, 1, 4, 2, 3).contiguous()  # (B, T, N, J. C)
-            pos_gt = pos_gt.permute(0, 1, 4, 2, 3).contiguous()
+
+            if cfg.TRAIN.PREDICT_ROOT:
+                pos_gt = p3d_gt_abs.permute(0, 1, 4, 2, 3).contiguous()
+            else:
+                pos_gt = pos_gt.permute(0, 1, 4, 2, 3).contiguous()
 
             if cfg.TRAIN.USE_INTER_LOSS:
                 for i in range(len(other_out)):
                     other_out[i] = other_out[i].permute(0, 1, 4, 2, 3).contiguous()  # (B, T, N, J. C)
-
             loss = mpjpe(out, pos_gt[:, pad:pad + 1])
             if summary_writer is not None:
                 summary_writer.add_scalar("mpjpe/iter", loss, iters)
@@ -591,9 +594,10 @@ if True:
                                     inputs_3d_gt = cam_3d[:, pad_t:pad_t + 1]
                                     p3d_root = copy.deepcopy(inputs_3d_gt[:, :, :1])  # (B,T, 1, 3, N)
                                     absolute_path_gt.append(p3d_root)
-                                    inputs_3d_gt = inputs_3d_gt-p3d_root
+                                    if not cfg.TRAIN.PREDICT_ROOT:
+                                        inputs_3d_gt = inputs_3d_gt-p3d_root
                                     #inputs_3d_gt = inputs_3d_gt + p3d_root
-                                    p3d_gt_abs = inputs_3d_gt + p3d_root
+                                    #p3d_gt_abs = inputs_3d_gt + p3d_root
                                     # inputs_3d_gt = inputs_3d_gt + p3d_root
                                     if use_2d_gt:
                                         h36_inp = inputs_2d_gt
@@ -647,7 +651,20 @@ if True:
                                         else:
                                             rotation = None
                                         out, other_info = model_test(inp, rotation)
-                                    out[:, :, 0] = 0
+
+                                    if not cfg.TRAIN.PREDICT_ROOT:
+                                        out[:, :, 0] = 0
+                                        prj_out_abs_to_2d = HumanCam.p3d_im2d_batch(out+p3d_root[...,  views_idx].to(out.device), sub_action, view_list, with_distor=True, flip=batch_flip, gt_2d=inputs_2d_gt[:, pad:pad + 1,:, :].to(out.device))
+                                    else:
+                                        absolute_path_pred.append(out[:, :, :1])
+                                        prj_out_abs_to_2d = HumanCam.p3d_im2d_batch(out, sub_action, view_list, with_distor=True, flip=batch_flip, gt_2d=inputs_2d_gt[:, pad:pad + 1,:, :].to(out.device))
+
+
+                                    if id_eval == 0:
+                                        np.save(args.visu_path+"/inputs_2d_gt" + "_epoch_" + str(epoch), inputs_2d_gt.detach().cpu().numpy())
+                                        np.save(args.visu_path+"/prj_out_abs_to_2d" + "_epoch_" + str(epoch), prj_out_abs_to_2d.detach().cpu().numpy())
+                                        np.save(args.visu_path+"/inputs_3d_gt" + "_epoch_" + str(epoch), inputs_3d_gt.detach().cpu().numpy())
+                                        np.save(args.visu_path+"/out" + "_epoch_" + str(epoch), out.detach().cpu().numpy())
 
                                     out = out.detach().cpu()
                                     if EVAL and args.vis_3d:
@@ -703,13 +720,13 @@ if True:
                                         action_bone_error[act][num_view - 1][idx_] += bone_error.item() * inputs_3d_gt.shape[0]
                                     action_mpjpe[act][num_view - 1][-1] += loss * inputs_3d_gt.shape[0]
                                     action_bone_error[act][num_view - 1][-1] += bone_loss * inputs_3d_gt.shape[0]
-                                """if cfg.TRAIN.PREDICT_ROOT:
+                                if cfg.TRAIN.PREDICT_ROOT:
                                     if id_traj == 0:
                                         absolute_path_gt = torch.cat(absolute_path_gt, dim=0).detach().cpu().numpy()
                                         absolute_path_pred = torch.cat(absolute_path_pred, dim=0).detach().cpu().numpy()
                                         np.save(args.visu_path+"/absolute_path_pred" + "_epoch_" + str(epoch), absolute_path_pred)
                                         np.save(args.visu_path+"/absolute_path_gt" + "_epoch_" + str(epoch), absolute_path_gt)
-                                    id_traj += 1"""
+                                    id_traj += 1
                                 
                 for num_view in cfg.TEST.NUM_VIEWS:
                     tmp = [0] * (NUM_VIEW + 1)

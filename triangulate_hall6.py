@@ -90,17 +90,17 @@ my_data = dict(my_data)
 actions = []
 N_frame_action_dict = {}
 for sub in operators:
-    keypoints['S{}'.format(sub)] = my_data['S1'].item()
+    keypoints['S{}'.format(sub)] = my_data['S{}'.format(sub)].item()
     ############ coco to h36m ######################
-    keypoints_new['S{}'.format(sub)] = copy.deepcopy(my_data['S1'].item())
+    keypoints_new['S{}'.format(sub)] = copy.deepcopy(my_data['S{}'.format(sub)].item())
     #remove [S4][task1_example6] and [S4][task3_example6] from keypoints_new dict
-    if sub == 4:
-        keypoints_new['S{}'.format(sub)].pop('task1_example6')
-        keypoints_new['S{}'.format(sub)].pop('task3_example6')
-
-
+    # if sub == 4:
+    #     keypoints_new['S{}'.format(sub)].pop('task1_example6')
+    #     keypoints_new['S{}'.format(sub)].pop('task3_example6')
     t_i=0
     for task in tasks:
+        if task==0:
+            continue
         for example in examples:
             """path_meta_data = path_meta_data + 'task'+str(task) + '/operator' + str(sub) + '/example' + str(example) + '/dataset/'
             path_meta_data = path_meta_data + 'task'+str(task) + '_' + str(sub) + '_example' + str(example)+'_metadata.npz'
@@ -156,7 +156,6 @@ def fetch(subjects, action_filter=None, parse_3d_poses=True, is_test=False, out_
     out_subject_action = []
     used_cameras = cfg.HALL6_DATA.TEST_CAMERAS if is_test else cfg.HALL6_DATA.TRAIN_CAMERAS  ###0,1,2,3
     for subject in subjects:  ###['S1','S5','S6','S7','S8']
-
         for action in keypoints_new[subject].keys():  ###
             if action_filter is not None:
                 found = False
@@ -166,6 +165,7 @@ def fetch(subjects, action_filter=None, parse_3d_poses=True, is_test=False, out_
                         break
                 if not found:
                     continue
+            #print('Processing subject {} action {}'.format(subject, action))
             poses_2d = keypoints_new[subject][action]  # 4 list of (611, 17, 8)
             out_subject_action.append([subject, action])
             n_frames = poses_2d[0].shape[0]
@@ -180,7 +180,7 @@ def fetch(subjects, action_filter=None, parse_3d_poses=True, is_test=False, out_
         return final_pose, out_subject_action
 
 use_2d_gt = cfg.DATA.USE_GT_2D
-receptive_field = cfg.NETWORK.TEMPORAL_LENGTH
+receptive_field = 1
 pad = receptive_field // 2
 causal_shift = 0
 view_list = cfg.HALL6_DATA.TRAIN_CAMERAS
@@ -197,7 +197,7 @@ if True:
                                        extra_poses_3d=None) if cfg.HALL6_DATA.PROJ_Frm_3DCAM == False else ChunkedGenerator(
         cfg.TRAIN.BATCH_SIZE, poses_train_2d, 1, pad=pad, causal_shift=causal_shift, shuffle=False, augment=False,
         kps_left=None, kps_right=None, joints_left=None, joints_right=None)
-    poses_train_2d, subject_action = fetch(cfg.HALL6_DATA.SUBJECTS_TRAIN, train_actions)
+    #poses_train_2d, subject_action = fetch(cfg.HALL6_DATA.SUBJECTS_TRAIN, train_actions)
 
     data_aug = DataAug(cfg, add_view=cfg.TRAIN.NUM_AUGMENT_VIEWS)
     iters = 0
@@ -260,6 +260,7 @@ if True:
         # print("prj_2dpre_to_3d[i, ...].cpu() shape", prj_2dpre_to_3d[0, ...].cpu().shape)
         # print("inp[:, pad:pad + 1, :, -1, :][i, ...].cpu() shape", inp[:, pad:pad + 1, :, -1:, :][0, ...].cpu().shape)
         # print(inp[-1, pad:pad + 1, :, :2, :].cpu())
+
         for i, s_a in enumerate(sub_action):
             subject = s_a[0]
             action = s_a[1]
@@ -287,10 +288,18 @@ if True:
         # for i, id in enumerate(current_id):
         #     data_npy_2d_from_3d[str(id[0])][id[1], ...] = pose_2D_from3D_gt[i, ...].cpu()
     print(view_list)
+    n_sub = 0
+    n_act = []
     for subject in data_npy.keys():
+        n_sub += 1
+        n_act.append(0)
         for action in data_npy[subject].keys():
+            n_act[-1]+=1
             for v in range(len(view_list)):
                 data_npy[subject][action][v] = torch.stack(data_npy[subject][action][v], dim=0).numpy()
+    print("n_sub", n_sub)
+    print("n_act", n_act)
+
     np.savez(path_dataset + '/'+args.triang_out_name+".npz", **data_npy)
     # np.save(path_dataset + '/2d_from_triangulated_3D.npy', data_npy_2d_from_3d)
     # np.save(path_dataset + '/2d_pred.npy', data_npy_2d_gt)

@@ -3,11 +3,42 @@
   <component name="ChangeListManager">
     <list default="true" id="ac046960-5dcf-4cb0-81df-44a7fc8c1c11" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cfg_triangulate.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/baseline1/cfg.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/baseline2/cfg.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/baseline3/cfg.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/baseline4/cfg.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/baseline5/cfg.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/bench1/cfg.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/bench2/cfg.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/bench3/cfg.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/bench7/cfg.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/cfg_baseline1.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/cfg_baseline2.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/cfg_baseline3.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/cfg_baseline4.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/cfg_baseline5.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/cfg_bench7.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/cfg_triangulate_16_cams.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/cfg/submit/cfg_triangulate_16_cams.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/s_baseline1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/s_baseline2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/s_baseline3" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/s_baseline4" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/s_baseline5" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/s_bench1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/s_bench2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/s_bench3" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/s_bench4" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/s_bench5" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/s_bench6" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfg/submit/s_bench7" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/common/arguments.py" beforeDir="false" afterPath="$PROJECT_DIR$/common/arguments.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/common/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/create_expe_dirs.sh" beforeDir="false" afterPath="$PROJECT_DIR$/create_expe_dirs.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/evaluate_triangulation.py" beforeDir="false" afterPath="$PROJECT_DIR$/evaluate_triangulation.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/run_hall6.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_hall6.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/triangulate_hall6.py" beforeDir="false" afterPath="$PROJECT_DIR$/triangulate_hall6.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/visualize_triangulation.py" beforeDir="false" afterPath="$PROJECT_DIR$/visualize_triangulation.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

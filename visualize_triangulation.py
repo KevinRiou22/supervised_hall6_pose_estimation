@@ -9,11 +9,11 @@ path_dataset = "./data/"
 path_meta_data = "./data/"
 #operators = [1]
 
-operators = [1, 2, 3, 4, 5]
-tasks= [0, 1, 2, 3]
-examples = list(range(1, 31))
+operators = [5]
+tasks= [1]
+examples = [2]#list(range(1, 31))
 
-my_data_pth = path_dataset+"triangulated_3D_with_distor_2D_structure.npz"#'hall6.npz' ####one example:t1_o1_ex7
+my_data_pth = path_dataset+"triangulated_3D_16_cams.npz"#"triangulated_3D_16_cams.npz"#'hall6.npz' ####one example:t1_o1_ex7
 data_npy = np.load(my_data_pth, allow_pickle=True)
 data_npy = dict(data_npy)
 
@@ -39,7 +39,11 @@ f = open('data/cams_params_all_examples.json', )
 params = json.load(f)
 
 cams = params['cams_order'] #os.listdir('data/images/task{}/operator{}/example{}'.format(k_a[0], operator_str, k_a[1]))
-frame = 0
+frame = 150
+
+op5_task1_ex2 = []
+op1_task1_ex1 = []
+
 #enumerate data_npy, keys and values
 for i, (k_s, v_s) in enumerate(data_npy.items()):
     print(k_s)
@@ -48,11 +52,12 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
         operator_str = "operator" + (''.join(filter(str.isdigit, k_s)))
 
         cams_videos = []
-        if k_a[1]!="example1":
+
+        if k_a[1]!="example2" or k_a[0]!="task1" or operator_str!="operator5":
             continue
+
         for cam in cams:
             cams_videos.append(read_video_cv2('data/images/{}/{}/{}/{}/video.avi'.format(k_a[0], operator_str, k_a[1], cam), [frame,frame+1]))
-
         print(k_a)
         fig1, axs = plt.subplots(4, 4)
         # remove x and y ticks and labels

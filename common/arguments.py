@@ -32,6 +32,7 @@ def parse_args():
     parser.add_argument('--log_path', help="", default='')
     parser.add_argument('--hyper_storage_path', help="", default='')
     parser.add_argument('--visu_path', help="", default='')
+    parser.add_argument('--visu_epoch', help="", default='')
     # Visualization
     parser.add_argument('--vis_3d', action='store_true', help='if vis 3d pose')
     parser.add_argument('--vis_complexity', action='store_true', help='if vis complexity')
