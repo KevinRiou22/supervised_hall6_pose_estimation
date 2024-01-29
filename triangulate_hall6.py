@@ -241,9 +241,10 @@ if True:
         #
         #     action_mpjpe[act][num_view - 1][-1] += loss * inputs_3d_gt.shape[0]
         #     continue
-        prj_2dpre_to_3d, stats_sing_values, _ = HumanCam.p2d_cam3d_batch_with_root(h36_inp[:, pad:pad + 1, :, :, view_list], sub_action, view_list, debug=False, confidences=vis[:, pad:pad+1, :, :, view_list])
+        #print("vis[:, pad:pad+1, :, :, view_list] : "+str(vis[0, pad:pad+1, 5, :, :]))
+        #input()
+        prj_2dpre_to_3d, stats_sing_values, _ = HumanCam.p2d_cam3d_batch_with_root(h36_inp[:, pad:pad + 1, :, :, view_list], sub_action, view_list, debug=False, use_thr=cfg.TRAIN.USE_CONF_THR, thr=cfg.TRAIN.CONF_THR, confidences=vis[:, pad:pad+1, :, :, view_list])
         prj_out_abs_to_2d = HumanCam.p3d_im2d_batch(prj_2dpre_to_3d, sub_action, view_list, with_distor=True, flip=batch_flip, gt_2d=inputs_2d_gt[:, pad:pad + 1, :, :].to(prj_2dpre_to_3d.device))
-
         # for id in current_id:
         #     if str(id[0]) not in data_npy_2d_gt.keys():
         #         data_npy_2d_gt[str(id[0])] = torch.zeros(

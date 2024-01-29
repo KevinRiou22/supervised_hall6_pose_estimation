@@ -87,6 +87,8 @@ config.TRAIN.WEIGHT_LOSS_BONES_2D = 1.0
 config.TRAIN.REGULARIZE_PARAMS_WEIGHT = 1.0
 config.TRAIN.WEIGHT_2D_LOSS = 1.0
 config.TRAIN.WEIGHT_STD_LOSS  = 0.1
+config.TRAIN.USE_CONF_THR= False
+config.TRAIN.CONF_THR= 0.6
 
 #Network
 config.NETWORK = edict()

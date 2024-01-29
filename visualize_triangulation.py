@@ -18,7 +18,7 @@ reset_config(cfg, args)
 
 #path_dataset = "./data/"
 path_dataset ="visu/submit/learn_conf_pred/"
-path_meta_data = "./data/"
+#path_meta_data = "./data/"
 #operators = [1]
 
 operators = [5]

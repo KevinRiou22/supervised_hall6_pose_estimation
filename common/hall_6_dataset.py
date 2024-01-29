@@ -331,7 +331,7 @@ def triangulation(pts, pmat):
     Xs = Xs.view(batch, njoint, 3)
     return Xs
 
-def weighted_triangulation_torch(pts, pmat, weights, threshold=0.7):
+def weighted_triangulation_torch(pts, pmat, weights, use_thr=False, threshold=0.4):
     '''
     pts: (batch, njoints, nview, 2)
     pmat: (nview, 3, 4) or (batch, nview, 3, 4)
@@ -362,7 +362,8 @@ def weighted_triangulation_torch(pts, pmat, weights, threshold=0.7):
     # print(type(threshold))
     # print(weights.type())
     # print()
-    #weights = torch.where(weights > torch.tensor(threshold).to(weights.device), weights, torch.tensor(cst).to(weights.device))  # 0.25
+    if use_thr:
+        weights = torch.where(weights > torch.tensor(threshold).to(weights.device), weights, torch.tensor(cst).to(weights.device))  # 0.25
     weights = weights.view(batch * njoint, nview, 1, 1).repeat(1, 1, 2, 4).reshape(batch * njoint, 2 * nview, 4)
     norm_a = torch.norm(A, p='fro', dim=-1, keepdim=True).repeat(1, 1, 4)
 
@@ -703,7 +704,7 @@ class Human36mCamera(MocapDataset):
         else:
             return trj_c3d, trj_w3d
 
-    def p2d_cam3d_batch(self, p2d, subject_list, view_list, debug=False, extri=None, proj=None, is_predicted_params=True, confidences=None):
+    def p2d_cam3d_batch(self, p2d, subject_list, view_list, debug=False, extri=None, proj=None, is_predicted_params=True, use_thr=False, thr=0.4, confidences=None):
         '''
         p2d: (B, T,J, C, N)
         '''
@@ -743,8 +744,8 @@ class Human36mCamera(MocapDataset):
             trj_w3d = weighted_triangulation_torch(
                 p2d.view(-1, J, C, N).permute(0, 1, 3, 2).contiguous().to(p2d.device),
                 prj_mat[:, view_list, ...].to(p2d.device),
-                weights=confidences.view(-1, J, 1, N).permute(0, 1, 3, 2).contiguous().to(p2d.device),
-                threshold=0.4)  # (B*T, J, 3) #0.25
+                weights=confidences.view(-1, J, 1, N).permute(0, 1, 3, 2).contiguous().to(p2d.device), use_thr=use_thr,
+                threshold=thr)  # (B*T, J, 3) #0.25
             stats_sing_values = {}
 
         trj_w3d_homo = torch.cat((trj_w3d, torch.ones(trj_w3d.shape[0], 17, 1).to(p2d.device)), dim = -1)
@@ -753,7 +754,7 @@ class Human36mCamera(MocapDataset):
         trj_c3d = trj_c3d - trj_c3d[:,:,:1]
         return trj_c3d, stats_sing_values, trj_w3d
 
-    def p2d_cam3d_batch_with_root(self, p2d, subject_list, view_list, debug=False, extri=None, proj=None, is_predicted_params=True, confidences=None):
+    def p2d_cam3d_batch_with_root(self, p2d, subject_list, view_list, debug=False, extri=None, proj=None, is_predicted_params=True, use_thr=False, thr=0.4, confidences=None):
         '''
         p2d: (B, T,J, C, N)
         '''
@@ -792,8 +793,8 @@ class Human36mCamera(MocapDataset):
             trj_w3d = weighted_triangulation_torch(
                 p2d.view(-1, J, C, N).permute(0, 1, 3, 2).contiguous().to(p2d.device),
                 prj_mat[:, :, ...].to(p2d.device),
-                weights=confidences.view(-1, J, 1, N).permute(0, 1, 3, 2).contiguous().to(p2d.device),
-                threshold=0.4)  # (B*T, J, 3) #0.25
+                weights=confidences.view(-1, J, 1, N).permute(0, 1, 3, 2).contiguous().to(p2d.device), use_thr=use_thr,
+                threshold=thr)  # (B*T, J, 3) #0.25
             stats_sing_values = {}
         # if self.cfg.TRAIN.PREDICT_ROOT:
         #     root_pred = trj_w3d[:, :1]
