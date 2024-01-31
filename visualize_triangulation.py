@@ -16,8 +16,8 @@ args = parse_args()
 update_config(args.cfg)  ###config file->cfg
 reset_config(cfg, args)
 
-#path_dataset = "./data/"
-path_dataset ="visu/submit/learn_conf_pred/"
+path_dataset = "./data/"
+#path_dataset ="visu/submit/learn_conf_pred/"
 #path_meta_data = "./data/"
 #operators = [1]
 
@@ -115,7 +115,7 @@ bones_stds = torch.std(torch.from_numpy(np.load("data/bones_length_hall6_triang_
 
 
 
-frame = 0
+frame = 6167
 
 op5_task1_ex2 = []
 op1_task1_ex1 = []

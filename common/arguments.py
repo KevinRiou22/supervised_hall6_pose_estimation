@@ -42,6 +42,9 @@ def parse_args():
 
     parser.add_argument('--triang_out_name', default='triangulated_16_cams')
     parser.add_argument('--data_name', default='triangulated_16_cams')
+    parser.add_argument('--src_tsk', default='1')
+    parser.add_argument('--src_op', default='1')
+    parser.add_argument('--src_ex', default='1')
     print("ARGS INITIALIZED")
     parser.set_defaults(align_r=True)
     parser.set_defaults(align_t=True)

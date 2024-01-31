@@ -740,7 +740,7 @@ def bone_len_loss(bone_priors, out, bones, subjects_, batch_subjects=None, cfg=N
             loss.append(mse)
     return torch.mean(torch.cat(loss))
 
-def bone_len_mae(bone_priors, out, bones, subjects_, batch_subjects=None):
+def bone_len_mae(bone_priors, out, bones, subjects_, batch_subjects=None, avg_ov_frames=True):
     n_bones = bones.shape[0]
     loss = []
     """if eval:
@@ -759,7 +759,10 @@ def bone_len_mae(bone_priors, out, bones, subjects_, batch_subjects=None):
             prior_len = torch.reshape(bone_priors[op].to(op_bones_lens.device), (1, 1, 1, bones.shape[0])).repeat(op_out.shape[:-2]+(1,))
             mae=torch.abs(prior_len.to(out.device) - op_bones_lens)
             loss.append(mae)
-    return torch.mean(torch.cat(loss), dim=1)
+    if avg_ov_frames:
+        return torch.mean(torch.cat(loss), dim=1)
+    else:
+        return torch.cat(loss)
 
 def get_bones_lens(bone_priors_mean, bone_priors_std, out, bones, subjects_, batch_subjects=None, cfg=None, eval=False):
     """if eval:

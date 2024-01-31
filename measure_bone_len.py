@@ -156,6 +156,6 @@ print("error_to_measure : " + str(error_to_measure))
 print(triangulated_bones.shape)
 print(np.array(bones_means_).shape)
 #print(bones_stds.shape)
-np.save("data/bones_length_hall6_triang_measure.npy", triangulated_bones)
-np.save("data/bones_length_hall6_physical_measure.npy", np.array(bones_means_))
+np.save("data/bones_length_hall6_triang_measure_16_cams.npy", triangulated_bones)
+np.save("data/bones_length_hall6_physical_measure_16_cams.npy", np.array(bones_means_))
 

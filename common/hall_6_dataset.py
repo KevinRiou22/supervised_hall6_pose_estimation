@@ -283,14 +283,27 @@ h36m_cameras_extrinsic_params = {
     ],
 }"""
 
-f = open('data/cams_params_all_examples.json', )
+f = open('data/cams_params_all_examples_.json', )
 
 params = json.load(f)
 # params = dict(params)
 #print(params)
 h36m_cameras_extrinsic_params = params['h36m_cameras_extrinsic_params']
 h36m_cameras_intrinsic_params = params['h36m_cameras_intrinsic_params']
-print(h36m_cameras_extrinsic_params)
+
+#enumerate extrinsic params
+for i_s, (k_s, v_s) in enumerate(h36m_cameras_extrinsic_params.items()):
+    for i_t, (k_t, v_t) in enumerate(v_s.items()):
+        for i_e, (k_e, v_e) in enumerate(v_t.items()):
+            #permute elements at index 11 and 15 in v_e
+            v_e[11], v_e[15] = v_e[15], v_e[11]
+            h36m_cameras_extrinsic_params[k_s][k_t][k_e] = v_e
+#enumerate intrinsic params
+#permute elements at index 11 and 15 in h36m_cameras_intrinsic_params
+h36m_cameras_intrinsic_params[11], h36m_cameras_intrinsic_params[15] = h36m_cameras_intrinsic_params[15], h36m_cameras_intrinsic_params[11]
+
+
+# print(h36m_cameras_extrinsic_params)
 
 
 def triangulation(pts, pmat):
