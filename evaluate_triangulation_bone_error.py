@@ -36,13 +36,13 @@ data_npy = dict(data_npy)
 
 
 
-f = open('data/cams_params_all_examples.json', )
+f = open('data/cams_params_all_examples_.json', )
 params = json.load(f)
 
 cams = params['cams_order'] #os.listdir('data/images/task{}/operator{}/example{}'.format(k_a[0], operator_str, k_a[1]))
 frame = 0
 
-f = open('data/cams_params_all_examples.json', )
+f = open('data/cams_params_all_examples_.json', )
 
 params = json.load(f)
 # params = dict(params)
@@ -122,7 +122,7 @@ reprojection_errors_examples = []
 bones_3D_errors_examples = []
 
 #initialize array with 'nan' values
-overall_bones_3D_errors = np.empty((len(operators), len(tasks), len(examples), len(cfg.HALL6_DATA.TEST_CAMERAS), 10000, len(bone_names_in_bones_list)))
+overall_bones_3D_errors = np.empty((len(operators), len(tasks), len(examples), len(cfg.HALL6_DATA.TEST_CAMERAS), 8000, len(bone_names_in_bones_list)))
 overall_bones_3D_errors[:] = np.nan
 #print(overall_bones_3D_errors)
 indexes = []
@@ -163,12 +163,13 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
             confidences = v_a[idx][: ,:, 7] #frame, joints, 1
             sub_action = [[k_s, k_a]]
             #pred_bone_mean, pred_bone_std = bone_losses(poses_3D.permute(0, 1, 4, 2, 3).contiguous()[:, :, :], bones.to(poses_3D.device), cfg.HALL6_DATA.SUBJECTS_TRAIN, batch_subjects=sub_action, cfg=cfg)
-            bones_err = bone_len_mae(gt_bones_lens, poses_3D.permute(0, 1, 4, 2, 3).contiguous()[:, :, :], bones.to(poses_3D.device), cfg.HALL6_DATA.SUBJECTS_TRAIN,batch_subjects=sub_action, avg_ov_frames=False)
-            #print("bones_err.shape : " + str(bones_err.shape))
+            bones_err = bone_len_mae(gt_bones_lens, poses_3D.permute(0, 1, 4, 2, 3).contiguous()[:, :, :], bones.to(poses_3D.device), cfg.HALL6_DATA.SUBJECTS_TRAIN,batch_subjects=sub_action, avg_ov_frames=False, remove_fails_from_stats=args.remove_fails_from_stats)
             #print("torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list))" + str(torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list)).shape))
             #overall_bones_3D_errors = np.append(overall_bones_3D_errors, torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list)), axis=0)
-            failed_triangulations += torch.sum(torch.isnan(poses_3D))/3
-            total_triangulations += poses_3D.shape[0]*poses_3D.shape[1]*poses_3D.shape[2]
+            # print(bones_err.shape)
+            # input()
+            failed_triangulations += torch.sum(torch.isnan(bones_err))
+            total_triangulations += bones_err.shape[0]*bones_err.shape[1]*bones_err.shape[2]*bones_err.shape[3]
             overall_bones_3D_errors[operator_id, task_id, example_id, idx, :bones_err.shape[1], :] = torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list))*1000
 
 failed_triangulations = 100*failed_triangulations/total_triangulations

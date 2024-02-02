@@ -744,7 +744,7 @@ def bone_len_loss(bone_priors, out, bones, subjects_, batch_subjects=None, cfg=N
             loss.append(mse)
     return torch.mean(torch.cat(loss))
 
-def bone_len_mae(bone_priors, out, bones, subjects_, batch_subjects=None, avg_ov_frames=True):
+def bone_len_mae(bone_priors, out, bones, subjects_, batch_subjects=None, avg_ov_frames=True, remove_fails_from_stats=False):
     n_bones = bones.shape[0]
     loss = []
     """if eval:
@@ -762,6 +762,12 @@ def bone_len_mae(bone_priors, out, bones, subjects_, batch_subjects=None, avg_ov
             op_bones_lens = torch.norm(op_out[:, :, :, bones[:, 0]] - op_out[:, :, :, bones[:, 1]], dim=len(op_out.shape) - 1)
             prior_len = torch.reshape(bone_priors[op].to(op_bones_lens.device), (1, 1, 1, bones.shape[0])).repeat(op_out.shape[:-2]+(1,))
             mae=torch.abs(prior_len.to(out.device) - op_bones_lens)
+            #get values where mae>prior_len/2
+            # print(prior_len)
+            # print(mae)
+            # input()
+            if remove_fails_from_stats:
+                mae = torch.where(mae > prior_len/2, torch.zeros_like(mae)*float('nan'), mae)
             loss.append(mae)
     if avg_ov_frames:
         return torch.mean(torch.cat(loss), dim=1)

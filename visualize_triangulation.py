@@ -115,7 +115,7 @@ bones_stds = torch.std(torch.from_numpy(np.load("data/bones_length_hall6_triang_
 
 
 
-frame = 0
+frame = int(args.src_frame)
 
 op5_task1_ex2 = []
 op1_task1_ex1 = []
@@ -129,7 +129,7 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
 
         cams_videos = []
 
-        if k_a[1]!="example1" or k_a[0]!="task1" or operator_str!="operator1":
+        if k_a[1]!="example"+str(args.src_ex) or k_a[0]!="task"+str(args.src_tsk) or operator_str!="operator"+str(args.src_op):
             continue
 
         #for cam in cams:
@@ -185,14 +185,15 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
             x_out = v_a[idx][frame, :, 4]
             y_out = v_a[idx][frame, :, 5]
             z_out = v_a[idx][frame, :, 6]
-            figs_3D.append(plt.figure("3D view {}".format(idx)))
-            axs_3D = figs_3D[-1].add_subplot(projection='3d')
-            axs_3D.scatter(x_out, y_out, z_out, marker='+', color='g', label="pred 3D")
-            #axs_3D.set_box_aspect((np.ptp(x_out), np.ptp(y_out), np.ptp(z_out)))
-            #set all axis limits to [-4, 4]
-            axs_3D.set_xlim3d([-1, 1])
-            axs_3D.set_ylim3d([-1, 1])
-            axs_3D.set_zlim3d([3, 5])
+            if idx == 0:
+                figs_3D.append(plt.figure("3D view {}".format(idx)))
+                axs_3D = figs_3D[-1].add_subplot(projection='3d')
+                axs_3D.scatter(x_out, y_out, z_out, marker='+', color='g', label="pred 3D")
+                #axs_3D.set_box_aspect((np.ptp(x_out), np.ptp(y_out), np.ptp(z_out)))
+                #set all axis limits to [-4, 4]
+                axs_3D.set_xlim3d([-1, 1])
+                axs_3D.set_ylim3d([-1, 1])
+                axs_3D.set_zlim3d([3, 5])
 
             i += 1
         plt.legend()

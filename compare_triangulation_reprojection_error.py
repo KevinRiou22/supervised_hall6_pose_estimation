@@ -12,15 +12,16 @@ from collections import OrderedDict
 import matplotlib
 import seaborn as sns
 
-
 font = {'weight' : 'bold',
         'size'   : 16}
 all_per_bone_errors = []
 matplotlib.rc('font', **font)
 fig, ax = plt.subplots(figsize=(10, 10))
+
 args = parse_args()
 models_to_compare = [("predicted weights", "data_epoch_59","cfg_triangulate_16_cams.yaml"), ("2D detector weights", "triangulate_16_cams","cfg_triangulate_16_cams.yaml")]
 models_names = [model_details[0] for model_details in models_to_compare]
+all_reproj_errors = []
 for model_details in models_to_compare:
     args.cfg = "./cfg/submit/"+model_details[2]
     args.data_name = model_details[1]
@@ -128,17 +129,13 @@ for model_details in models_to_compare:
     bones_3D_errors_examples = []
 
     #initialize array with 'nan' values
-    overall_bones_3D_errors = np.empty((len(operators), len(tasks), len(examples), len(cfg.HALL6_DATA.TEST_CAMERAS), 8000, len(bone_names_in_bones_list)))
-    overall_bones_3D_errors[:] = np.nan
+    overall_joints_repr_error = np.empty((len(operators), len(tasks), len(examples), 8000, cfg.HALL6_DATA.NUM_JOINTS))
+    overall_joints_repr_error[:] = np.nan
     #print(overall_bones_3D_errors)
     indexes = []
 
-    failed_triangulations = 0
-    total_triangulations = 0
 
     for i, (k_s, v_s) in enumerate(data_npy.items()):
-        # if i>0:
-        #     break
         print(k_s)
         operator_id = int((''.join(filter(str.isdigit, k_s)))) - 1
         #operator_str = "operator" + operator_id
@@ -159,6 +156,7 @@ for model_details in models_to_compare:
             reprojection_errors_examples[-1].append([])
             bone_3D_std_examples[-1].append([])
             bones_3D_errors_examples[-1].append([])
+            reproj_errors = []
             for idx, view_idx in enumerate(cfg.HALL6_DATA.TEST_CAMERAS):
                 cam_resolution = resolutions[cfg.HALL6_DATA.CAMERAS_IDS[view_idx]]
                 poses_2D_hrnet = (torch.from_numpy(v_a[idx][:,:, 2:4])+1)/2#frame, joints, (x,y)
@@ -167,61 +165,24 @@ for model_details in models_to_compare:
                 poses_2D_reprojection =  (torch.from_numpy(v_a[idx][:,:, 0:2])+1)/2 #frame, joints, (x,y)
                 poses_2D_reprojection[:,:, 0] = poses_2D_reprojection[:,:, 0]*cam_resolution[0]
                 poses_2D_reprojection[:,:, 1] = poses_2D_reprojection[:,:, 1]*cam_resolution[1]
-                poses_3D = torch.unsqueeze(torch.unsqueeze(torch.from_numpy(v_a[idx][: ,:, 4:7]), 0), -1) #frame, joints, (x,y,z)
-                confidences = v_a[idx][: ,:, 7] #frame, joints, 1
-                sub_action = [[k_s, k_a]]
-                #pred_bone_mean, pred_bone_std = bone_losses(poses_3D.permute(0, 1, 4, 2, 3).contiguous()[:, :, :], bones.to(poses_3D.device), cfg.HALL6_DATA.SUBJECTS_TRAIN, batch_subjects=sub_action, cfg=cfg)
-                bones_err = bone_len_mae(gt_bones_lens, poses_3D.permute(0, 1, 4, 2, 3).contiguous()[:, :, :], bones.to(poses_3D.device), cfg.HALL6_DATA.SUBJECTS_TRAIN,batch_subjects=sub_action, avg_ov_frames=False)
-                #print("bones_err.shape : " + str(bones_err.shape))
-                #print("torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list))" + str(torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list)).shape))
-                #overall_bones_3D_errors = np.append(overall_bones_3D_errors, torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list)), axis=0)
-                failed_triangulations += torch.sum(torch.isnan(poses_3D))/3
-                total_triangulations += poses_3D.shape[0]*poses_3D.shape[1]*poses_3D.shape[2]
-                overall_bones_3D_errors[operator_id, task_id, example_id, idx, :bones_err.shape[1], :] = torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list))*1000
+                reproj_error = pjpe(poses_2D_hrnet, poses_2D_reprojection)
+                reproj_errors.append(torch.squeeze(reproj_error).detach().cpu().numpy().reshape(-1, cfg.HALL6_DATA.NUM_JOINTS))
+            reproj_errors = np.array(reproj_errors)
+            reproj_errors = np.min(reproj_errors, axis=0)
+            overall_joints_repr_error[operator_id, task_id, example_id, :poses_2D_reprojection.shape[0], :] = reproj_errors
 
-    failed_triangulations = 100*failed_triangulations/total_triangulations
 
-    #get the mean of 3D errors for each subject, avoiding nan values
-    #mean_overall_bones_3D_errors = np.nanmean(overall_bones_3D_errors, axis=(1, 2, 3, 4, 5))
-    #print("mean bone error for each subject : " + str(mean_overall_bones_3D_errors))
-    #get the confidence intervals on the 3D errors for each subject, avoiding nan values
-    #conf_int_overall_bones_3D_errors = np.nanpercentile(overall_bones_3D_errors, [2.5, 97.5], axis=(1, 2, 3, 4, 5))
-    #print("conf_int_overall_bones_3D_errors : " + str(conf_int_overall_bones_3D_errors))
-    #get the worst frame in overall_bones_3D_errors
-    #worst_frame = np.unravel_index(np.nanargmax(overall_bones_3D_errors, axis=None), overall_bones_3D_errors.shape)
-    # get the index of the max value of the 6D array
+    overall_joints_repr_error = overall_joints_repr_error.flatten()
+    all_reproj_errors.append(overall_joints_repr_error)
 
-    #print("worst_frame : " + str(worst_frame))
-    #print("worst frame error : ",overall_bones_3D_errors[worst_frame])
-    #merge axis 0, 1, 2, 3, 4 in overall_bones_3D_errors
-    #flatten per bone errors
-    per_bone_errors = overall_bones_3D_errors.flatten()
-    #remove nan values
 
-    #per_bone_errors = per_bone_errors[~np.isnan(per_bone_errors).any(axis=0)]
-    #print("per_bone_errors : " + str(per_bone_errors.shape))
-    #print("per_bone_errors.shape : " + str(per_bone_errors.shape))
 
-    #mean_overall_bones_3D_errors = ["{:.1f}".format(i) for i in mean_overall_bones_3D_errors.tolist()]
-    #display scientific notation with 2 digits if more than 2 digits before the exponent, otherwise display 2 digits
-    #mean_overall_bones_3D_errors = [str(i) if len(i.split(".")[0])<=2 else "{:.2e}".format(float(i)) for i in mean_overall_bones_3D_errors]
-
-    #worst_error = ["{:.1f}".format(overall_bones_3D_errors[worst_frame]) if len("{:.1f}".format(overall_bones_3D_errors[worst_frame]).split(".")[0])<=2 else "{:.2e}".format(float("{:.1f}".format(overall_bones_3D_errors[worst_frame])))]
-    #failed_triangulations = ["{:.1f}".format(failed_triangulations.detach().cpu().numpy())]
-    #global_mean = ["{:.1f}".format(np.nanmean(per_bone_errors))]
-    #global_mean = [str(i) if len(i.split(".")[0])<=2 else "{:.2e}".format(float(i)) for i in global_mean]
-    #to_print = ["16 views"] + mean_overall_bones_3D_errors + global_mean + worst_error+[" "]+["-" for i in range(7)]+[" "]+failed_triangulations
-    #convert all elements in to_print to string
-    #to_print = [str(elem) for elem in to_print]
-    #print(" & ".join(to_print))
-
-    all_per_bone_errors.append(per_bone_errors)
-all_per_bone_errors = np.array(all_per_bone_errors)
-print("all_per_bone_errors.shape : " + str(all_per_bone_errors.shape))
+all_reproj_errors = np.array(all_reproj_errors)
+print("all_per_bone_errors.shape : " + str(all_reproj_errors.shape))
 #permute the axes of all_per_bone_errors
-all_per_bone_errors = np.transpose(all_per_bone_errors)
-print("all_per_bone_errors.shape : " + str(all_per_bone_errors.shape))
-all_per_bone_errors = all_per_bone_errors[~np.isnan(all_per_bone_errors).any(axis=1)]
+all_reproj_errors = np.transpose(all_reproj_errors)
+print("all_per_bone_errors.shape : " + str(all_reproj_errors.shape))
+all_reproj_errors = all_reproj_errors[~np.isnan(all_reproj_errors).any(axis=1)]
 # violin plot of per bone errors, avoiding nan values
 
 #ax.set_title('Violin plot of bone errors,\n while triangulation from 16 views,\n weighted by 2D detector confidences.')
@@ -230,8 +191,8 @@ all_per_bone_errors = all_per_bone_errors[~np.isnan(all_per_bone_errors).any(axi
 #set xlabel, ylabel and title fonts to bold
 #ax.set_xlabel('Models', fontweight='bold')
 #set y label to bold and font size to 16
-ax.set_ylabel('Error (mm)', fontweight='bold', fontsize=18)
-ax.set_title('Bone Errors', fontweight='bold')
+ax.set_ylabel('Error (px)', fontweight='bold', fontsize=18)
+ax.set_title('Reprojection Errors (best view)', fontweight='bold')
 #replace "Right" by R. and "Left" by L. in bone_names_in_bones_list
 #bone_names_in_bones_list = [bone_name.replace("Right", "R.").replace("Left", "L.") for bone_name in bone_names_in_bones_list]
 # replace "l_" by L. and "r_" by R. in bone_names_in_bones_list
@@ -240,11 +201,11 @@ ax.set_title('Bone Errors', fontweight='bold')
 #bone_names_in_bones_list = [bone_name.replace("_", "\n") for bone_name in bone_names_in_bones_list]
 
 #plot the boxplot with plt
-plt.boxplot(all_per_bone_errors, showmeans=False, showfliers=False)
+plt.boxplot(all_reproj_errors, showmeans=False, showfliers=False)
 
 
 #plot violin with plt
-plt.violinplot(all_per_bone_errors, showmeans=True, showextrema=False)
+plt.violinplot(all_reproj_errors, showmeans=True, showextrema=False)
 #set xticks
 ax.set_xticks(np.arange(len(models_names))+1)
 ax.set_xticklabels(models_names)
@@ -253,7 +214,7 @@ ax.set_xticklabels(models_names)
 #write xtick obliquely
 #plt.xticks(rotation=45)
 # limit y axis to 0-300
-plt.ylim(0, 60)
+plt.ylim(0, 30)
 # add y grid
 plt.grid(axis='y')
 #add subticks y axis
