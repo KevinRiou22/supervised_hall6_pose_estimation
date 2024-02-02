@@ -354,6 +354,10 @@ def mpjpe(predicted, target):
     assert predicted.shape == target.shape
     l=torch.norm(predicted - target, dim=len(target.shape)-1)
     return torch.mean(l)
+def pjpe(predicted, target):
+    assert predicted.shape == target.shape
+    l = torch.norm(predicted - target, dim=len(target.shape) - 1)
+    return l
 
 def mpjpe_per_view(predicted, target):
     assert predicted.shape == target.shape

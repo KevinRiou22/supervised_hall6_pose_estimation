@@ -49,7 +49,7 @@ def read_video_cv2(video_path, frame_range=[0, 10]):
         else:
              break
     return np.array(all)
-f = open('data/cams_params_all_examples.json', )
+f = open('data/cams_params_all_examples_.json', )
 params = json.load(f)
 
 cams = params['cams_order'] #os.listdir('data/images/task{}/operator{}/example{}'.format(k_a[0], operator_str, k_a[1]))
@@ -115,7 +115,7 @@ bones_stds = torch.std(torch.from_numpy(np.load("data/bones_length_hall6_triang_
 
 
 
-frame = 6167
+frame = 0
 
 op5_task1_ex2 = []
 op1_task1_ex1 = []

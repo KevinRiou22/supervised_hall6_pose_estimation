@@ -10,6 +10,7 @@ from common.arguments import parse_args
 from common.config import reset_config, update_config
 from collections import OrderedDict
 import matplotlib
+import seaborn as sns
 
 font = {'weight' : 'bold',
         'size'   : 14}
@@ -120,19 +121,27 @@ bone_3D_std_examples = []
 reprojection_errors_examples = []
 bones_3D_errors_examples = []
 
-#initialize empty numpy array
-overall_bones_3D_errors = np.empty((0, len(bone_names_in_bones_list)))
+#initialize array with 'nan' values
+overall_bones_3D_errors = np.empty((len(operators), len(tasks), len(examples), len(cfg.HALL6_DATA.TEST_CAMERAS), 10000, len(bone_names_in_bones_list)))
+overall_bones_3D_errors[:] = np.nan
+#print(overall_bones_3D_errors)
 indexes = []
 
+failed_triangulations = 0
+total_triangulations = 0
 
 for i, (k_s, v_s) in enumerate(data_npy.items()):
     print(k_s)
+    operator_id = int((''.join(filter(str.isdigit, k_s)))) - 1
+    #operator_str = "operator" + operator_id
     bone_3D_std_examples.append([])
     bones_3D_errors_examples.append([])
     reprojection_errors_examples.append([])
     for j, (k_a, v_a) in enumerate(v_s.item().items()):
         k_a = k_a.split("_")
-        operator_str = "operator" + (''.join(filter(str.isdigit, k_s)))
+
+        task_id = int((''.join(filter(str.isdigit, k_a[0]))))-1
+        example_id = int((''.join(filter(str.isdigit, k_a[1]))))-1
 
         cams_videos = []
         # if k_a[1]!="example1":
@@ -157,116 +166,84 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
             bones_err = bone_len_mae(gt_bones_lens, poses_3D.permute(0, 1, 4, 2, 3).contiguous()[:, :, :], bones.to(poses_3D.device), cfg.HALL6_DATA.SUBJECTS_TRAIN,batch_subjects=sub_action, avg_ov_frames=False)
             #print("bones_err.shape : " + str(bones_err.shape))
             #print("torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list))" + str(torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list)).shape))
-            overall_bones_3D_errors = np.append(overall_bones_3D_errors, torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list)), axis=0)
+            #overall_bones_3D_errors = np.append(overall_bones_3D_errors, torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list)), axis=0)
+            failed_triangulations += torch.sum(torch.isnan(poses_3D))/3
+            total_triangulations += poses_3D.shape[0]*poses_3D.shape[1]*poses_3D.shape[2]
+            overall_bones_3D_errors[operator_id, task_id, example_id, idx, :bones_err.shape[1], :] = torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list))*1000
 
-            curent_indexes = [[k_s, k_a, view_idx, frame_id] for frame_id in range(poses_3D.shape[1])]
-            indexes = indexes + curent_indexes
-            bones_err=torch.mean(bones_err, dim=1)
-            # print("pred_bone_mean : " + str(pred_bone_mean))
-            # print("bones_means : " + str(bones_means))
-            # input()
+failed_triangulations = 100*failed_triangulations/total_triangulations
 
-            #bones_err = torch.abs(torch.squeeze(pred_bone_mean)-bones_means[i]).detach().cpu().numpy()
-            bones_3D_errors_examples[-1][-1].append(torch.squeeze(bones_err).detach().cpu().numpy())
-            reproj_error = mpjpe(poses_2D_hrnet, poses_2D_reprojection)
-            reproj_error = reproj_error.detach().cpu().numpy()
-            reprojection_errors_views[idx].append(reproj_error)
-            reprojection_errors_subjects[i].append(reproj_error)
-            reprojection_errors_examples[-1][-1].append(reproj_error)
-            # print(pred_bone_std.shape)
-            # print(pred_bone_mean)
-            # input()
-            #bone_3D_std_examples[-1][-1].append(np.squeeze(pred_bone_std.detach().cpu().numpy()))
+#get the mean of 3D errors for each subject, avoiding nan values
+mean_overall_bones_3D_errors = np.nanmean(overall_bones_3D_errors, axis=(1, 2, 3, 4, 5))
+print("mean bone error for each subject : " + str(mean_overall_bones_3D_errors))
+#get the confidence intervals on the 3D errors for each subject, avoiding nan values
+#conf_int_overall_bones_3D_errors = np.nanpercentile(overall_bones_3D_errors, [2.5, 97.5], axis=(1, 2, 3, 4, 5))
+#print("conf_int_overall_bones_3D_errors : " + str(conf_int_overall_bones_3D_errors))
+#get the worst frame in overall_bones_3D_errors
+worst_frame = np.unravel_index(np.nanargmax(overall_bones_3D_errors, axis=None), overall_bones_3D_errors.shape)
+# get the index of the max value of the 6D array
 
-print("overall max error : " + str(np.max(overall_bones_3D_errors, axis=0)))
-print("overall min error : " + str(np.min(overall_bones_3D_errors, axis=0)))
-print(overall_bones_3D_errors.shape)
-print(len(indexes))
-print(np.argmax(overall_bones_3D_errors))
-print(indexes[np.argmax(overall_bones_3D_errors, axis=0)])
+print("worst_frame : " + str(worst_frame))
+print("worst frame error : ",overall_bones_3D_errors[worst_frame])
+#merge axis 0, 1, 2, 3, 4 in overall_bones_3D_errors
+per_bone_errors = np.reshape(overall_bones_3D_errors, (-1, len(bone_names_in_bones_list)))
+#remove nan values
+per_bone_errors = per_bone_errors[~np.isnan(per_bone_errors).any(axis=1)]
+print("per_bone_errors : " + str(per_bone_errors.shape))
+print("per_bone_errors.shape : " + str(per_bone_errors.shape))
 
-# violin plot of overall_bones_3D_errors
-plt.figure("overall_bones_3D_errors")
-plt.violinplot(overall_bones_3D_errors, showmeans=True, showextrema=False)
-plt.xticks(np.arange(1, len(bone_names_in_bones_list)+1), bone_names_in_bones_list)
-plt.ylabel("mm")
-plt.title("overall_bones_3D_errors")
-plt.grid()
-plt.show()
+mean_overall_bones_3D_errors = ["{:.1f}".format(i) for i in mean_overall_bones_3D_errors.tolist()]
+#display scientific notation with 2 digits if more than 2 digits before the exponent, otherwise display 2 digits
+mean_overall_bones_3D_errors = [str(i) if len(i.split(".")[0])<=2 else "{:.2e}".format(float(i)) for i in mean_overall_bones_3D_errors]
 
-
-avg_repr_error = []
-to_print_bone = []
-to_print_reproj = []
-for i in range(len(bones_3D_errors_examples)):
-    #print(len(bones_3D_errors_examples))
-    #print(np.array(bone_3D_std_examples[i]).shape)
-    #plt.figure("std_errors_examples subject {}".format(i))
-    #plt.bar(np.arange(len(bone_3D_std_examples[i])), np.mean(np.array(bone_3D_std_examples[i]), axis=(1,2)))
-    plt.figure("reprojection_errors_examples subject {}".format(i))
-    plt.bar(np.arange(len(reprojection_errors_examples[i])), np.min(np.array(reprojection_errors_examples[i]), axis=1))
-    plt.figure("bones_3D_errors_examples subject {}".format(i))
-    bottom = 0
-    for j in range(len(bones_means)):
-        bon_errr=np.mean(np.array(bones_3D_errors_examples[i])[:, :, j], axis=(1))/len(bones_means)*1000
-        plt.bar(np.arange(len(bones_3D_errors_examples[i])), bon_errr, bottom=bottom, label="{}".format(bone_names_in_bones_list[j]))
-        plt.legend()
-        bottom += bon_errr
-    # set y axis name
-    plt.ylabel("3D bone error (mm)")
-    # set x axis name
-    plt.xlabel("Tasks")
-
-    print("mean bone error subject {} : {} mm".format(i, np.mean(np.array(bones_3D_errors_examples[i]))*1000))
-    print("mean reproj. error subject {} : {} px".format(i, np.mean(np.min(np.array(reprojection_errors_examples[i])))))
-    to_print_bone.append("{:.1f}".format(np.mean(np.array(bones_3D_errors_examples[i]))*1000))
-    to_print_reproj.append("{:.1f}".format(np.mean(np.min(np.array(reprojection_errors_examples[i])))))
-    avg_repr_error.append(np.mean(np.min(np.array(reprojection_errors_examples[i]))))
-avg_repr_error = np.mean(np.array(avg_repr_error))
-print("avg_repr_error : " + str(avg_repr_error)+ " px")
-to_print_reproj.append("{:.1f}".format(avg_repr_error))
-
-plt.figure("bones_3D_errors_examples all subjects")
-bottom = 0
-bar_data = []
-for bon_ in range(len(bones_means)):
-    bar_data.append([[] for k in range(27)])
-    for subj in range(len(bones_3D_errors_examples)):
-        for ex in range(len(bones_3D_errors_examples[subj])):
-            bar_data[bon_][ex].append(np.mean(np.array(bones_3D_errors_examples[subj])[ex, :, bon_]))
-
-for bon_ in range(len(bones_means)):
-    for ex in range(27):
-        bar_data[bon_][ex] = np.mean(np.array(bar_data[bon_][ex]))
-
-bar_data = np.array(bar_data)
-
-for j in range(len(bones_means)):
-    bon_errr = bar_data[j]/len(bones_means)*1000
-    plt.bar(np.arange(bon_errr.shape[0]), bon_errr, bottom=bottom, label="{}".format(bone_names_in_bones_list[j]))
-    bottom += bon_errr
-# set y axis name
-plt.ylabel("3D bone error (mm)", fontweight='bold', fontsize=18)
-# set x axis name
-plt.xlabel("Tasks", fontweight='bold', fontsize=18)
-print('mean bone len error all subjects {} mm'.format(np.mean(np.array(bar_data))*1000))
-to_print_bone.append("{:.1f}".format(np.mean(np.array(bar_data))*1000))
-#print(np.array(reprojection_errors_examples).shape)
-#print(np.min(np.array(reprojection_errors_examples), axis=1))
-
-# generate a latex table with columns avg_repr_error, avg_bone_len_error
-# and rows: all subjects, subject 1, subject 2, ...
-
-to_print = ["16 views"] + to_print_bone +[" "]+ to_print_reproj
-
+worst_error = ["{:.1f}".format(overall_bones_3D_errors[worst_frame]) if len("{:.1f}".format(overall_bones_3D_errors[worst_frame]).split(".")[0])<=2 else "{:.2e}".format(float("{:.1f}".format(overall_bones_3D_errors[worst_frame])))]
+failed_triangulations = ["{:.1f}".format(failed_triangulations.detach().cpu().numpy())]
+global_mean = ["{:.1f}".format(np.nanmean(per_bone_errors))]
+global_mean = [str(i) if len(i.split(".")[0])<=2 else "{:.2e}".format(float(i)) for i in global_mean]
+to_print = ["16 views"] + mean_overall_bones_3D_errors + global_mean + worst_error+[" "]+["-" for i in range(7)]+[" "]+failed_triangulations
+#convert all elements in to_print to string
+to_print = [str(elem) for elem in to_print]
 print(" & ".join(to_print))
 
 
+# violin plot of per bone errors, avoiding nan values
+fig, ax = plt.subplots(figsize=(10, 10))
+#ax.set_title('Violin plot of bone errors,\n while triangulation from 16 views,\n weighted by 2D detector confidences.')
+#ax.set_ylabel('Error (mm)')
+#ax.set_xlabel('Bones')
+#set xlabel, ylabel and title fonts to bold
+ax.set_xlabel('Bones', fontweight='bold')
+ax.set_ylabel('Error (mm)', fontweight='bold')
+ax.set_title('Violin plot of bone errors,\n while triangulating from 16 views,\n weighted by 2D detector confidences.', fontweight='bold')
+#replace "Right" by R. and "Left" by L. in bone_names_in_bones_list
+bone_names_in_bones_list = [bone_name.replace("Right", "R.").replace("Left", "L.") for bone_name in bone_names_in_bones_list]
+# replace "l_" by L. and "r_" by R. in bone_names_in_bones_list
+bone_names_in_bones_list = [bone_name.replace("l_e", "L.e").replace("r_e", "R.e") for bone_name in bone_names_in_bones_list]
+#replace "_" by "\n" in bone_names_in_bones_list
+#bone_names_in_bones_list = [bone_name.replace("_", "\n") for bone_name in bone_names_in_bones_list]
 
-#split the legend in 2 columns
-handles, labels = plt.gca().get_legend_handles_labels()
-by_label = OrderedDict(zip(labels, handles))
-plt.legend(by_label.values(), by_label.keys(), ncol=2)
+#plot the boxplot with plt
+plt.boxplot(per_bone_errors, showmeans=False, showfliers=False)
 
-#plt.legend()
+
+#plot violin with plt
+plt.violinplot(per_bone_errors, showmeans=True, showextrema=False)
+#set xticks
+ax.set_xticks(np.arange(len(bone_names_in_bones_list))+1)
+ax.set_xticklabels(bone_names_in_bones_list)
+#reduce font size of xticks
+plt.xticks(fontsize=8)
+#write xtick obliquely
+plt.xticks(rotation=45)
+# limit y axis to 0-300
+plt.ylim(0, 300)
+# add y grid
+plt.grid(axis='y')
+#add subticks y axis
+ax.tick_params(axis='y', which='minor', bottom=False)
+#add a vertical line for each sub-tick
+for i in range(0, 301, 10):
+    plt.axhline(y=i, color='grey', linestyle='-', linewidth=0.5)
+
+
 plt.show()

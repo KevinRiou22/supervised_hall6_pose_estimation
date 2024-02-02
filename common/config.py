@@ -169,6 +169,7 @@ config.HALL6_DATA.BONES_NAMES = ['Hip', 'RightThigh', 'RightShin', 'LeftThigh', 
 config.HALL6_DATA.BONES_FLAG = ['m', 'r', 'r', 'l', 'l',  'l', 'l', 'r', 'r', 'r', 'l', 'r', 'l']
 
 config.HALL6_DATA.NUM_JOINTS = 17
+config.HALL6_DATA.JOINTS = ['Nose', 'R.Eye', 'L.Eye', 'R.Ear', 'L.Ear', 'L.Shoulder', 'R.Shoulder', 'L.Elbow', 'R.Elbow', 'L.Wrist', 'R.Wrist', 'L.Hip', 'R.Hip', 'L.Knee', 'R.Knee', 'L.Ankle', 'R.Ankle']
 #config.HALL6_DATA.JOINT_SYMMETRY = [[4, 5, 6, 11, 12, 13], [1, 2, 3, 14, 15, 16]]
 config.HALL6_DATA.JOINT_SYMMETRY = [[2, 4,  6, 8, 10, 12, 14, 16, 4, 2], [1, 3, 5, 7, 9, 11, 13, 15, 3, 1]]
 

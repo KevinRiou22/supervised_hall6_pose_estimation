@@ -41,7 +41,7 @@ def parse_args():
     parser.add_argument('--vis_dataset', help="Specify the name of the vis datast", default='h36m')
 
     parser.add_argument('--triang_out_name', default='triangulated_16_cams')
-    parser.add_argument('--data_name', default='triangulated_16_cams')
+    parser.add_argument('--data_name', default='triangulate_16_cams')
     parser.add_argument('--src_tsk', default='1')
     parser.add_argument('--src_op', default='1')
     parser.add_argument('--src_ex', default='1')

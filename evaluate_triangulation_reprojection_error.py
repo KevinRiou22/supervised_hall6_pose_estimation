@@ -36,13 +36,13 @@ data_npy = dict(data_npy)
 
 
 
-f = open('data/cams_params_all_examples.json', )
+f = open('data/cams_params_all_examples_.json', )
 params = json.load(f)
 
 cams = params['cams_order'] #os.listdir('data/images/task{}/operator{}/example{}'.format(k_a[0], operator_str, k_a[1]))
 frame = 0
 
-f = open('data/cams_params_all_examples.json', )
+f = open('data/cams_params_all_examples_.json', )
 
 params = json.load(f)
 # params = dict(params)
@@ -122,8 +122,8 @@ reprojection_errors_examples = []
 bones_3D_errors_examples = []
 
 #initialize array with 'nan' values
-overall_bones_3D_errors = np.empty((len(operators), len(tasks), len(examples), len(cfg.HALL6_DATA.TEST_CAMERAS), 10000, len(bone_names_in_bones_list)))
-overall_bones_3D_errors[:] = np.nan
+overall_joints_repr_error = np.empty((len(operators), len(tasks), len(examples), 8000, cfg.HALL6_DATA.NUM_JOINTS))
+overall_joints_repr_error[:] = np.nan
 #print(overall_bones_3D_errors)
 indexes = []
 
@@ -149,6 +149,7 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
         reprojection_errors_examples[-1].append([])
         bone_3D_std_examples[-1].append([])
         bones_3D_errors_examples[-1].append([])
+        reproj_errors = []
         for idx, view_idx in enumerate(cfg.HALL6_DATA.TEST_CAMERAS):
             cam_resolution = resolutions[cfg.HALL6_DATA.CAMERAS_IDS[view_idx]]
             poses_2D_hrnet = (torch.from_numpy(v_a[idx][:,:, 2:4])+1)/2#frame, joints, (x,y)
@@ -157,40 +158,75 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
             poses_2D_reprojection =  (torch.from_numpy(v_a[idx][:,:, 0:2])+1)/2 #frame, joints, (x,y)
             poses_2D_reprojection[:,:, 0] = poses_2D_reprojection[:,:, 0]*cam_resolution[0]
             poses_2D_reprojection[:,:, 1] = poses_2D_reprojection[:,:, 1]*cam_resolution[1]
-            poses_3D = torch.unsqueeze(torch.unsqueeze(torch.from_numpy(v_a[idx][: ,:, 4:7]), 0), -1) #frame, joints, (x,y,z)
-            confidences = v_a[idx][: ,:, 7] #frame, joints, 1
-            sub_action = [[k_s, k_a]]
-            #pred_bone_mean, pred_bone_std = bone_losses(poses_3D.permute(0, 1, 4, 2, 3).contiguous()[:, :, :], bones.to(poses_3D.device), cfg.HALL6_DATA.SUBJECTS_TRAIN, batch_subjects=sub_action, cfg=cfg)
-            bones_err = bone_len_mae(gt_bones_lens, poses_3D.permute(0, 1, 4, 2, 3).contiguous()[:, :, :], bones.to(poses_3D.device), cfg.HALL6_DATA.SUBJECTS_TRAIN,batch_subjects=sub_action, avg_ov_frames=False)
-            #print("bones_err.shape : " + str(bones_err.shape))
-            #print("torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list))" + str(torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list)).shape))
-            #overall_bones_3D_errors = np.append(overall_bones_3D_errors, torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list)), axis=0)
-            overall_bones_3D_errors[operator_id, task_id, example_id, idx, :bones_err.shape[1], :] = torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list))
+            reproj_error = pjpe(poses_2D_hrnet, poses_2D_reprojection)
+            reproj_errors.append(torch.squeeze(reproj_error).detach().cpu().numpy().reshape(-1, cfg.HALL6_DATA.NUM_JOINTS))
+        reproj_errors = np.array(reproj_errors)
+        reproj_errors = np.min(reproj_errors, axis=0)
+        overall_joints_repr_error[operator_id, task_id, example_id, :poses_2D_reprojection.shape[0], :] = reproj_errors
 
-#np.save("overall_bones_3D_errors.npy", overall_bones_3D_errors)
-#get the mean of 3D errors for each subject, for each bone, avoiding nan values
-mean_overall_bones_3D_errors = np.nanmean(overall_bones_3D_errors, axis=(1, 2, 3, 4))
-print("mean_overall_bones_3D_errors : " + str(mean_overall_bones_3D_errors))
+mean_overall_joint_errors = np.nanmean(overall_joints_repr_error, axis=(1, 2, 3, 4))
+print("mean bone error for each subject : " + str(mean_overall_joint_errors))
+#get the confidence intervals on the 3D errors for each subject, avoiding nan values
+#conf_int_overall_bones_3D_errors = np.nanpercentile(overall_bones_3D_errors, [2.5, 97.5], axis=(1, 2, 3, 4, 5))
+#print("conf_int_overall_bones_3D_errors : " + str(conf_int_overall_bones_3D_errors))
 #get the worst frame in overall_bones_3D_errors
-worst_frame = np.unravel_index(np.nanargmax(overall_bones_3D_errors, axis=None), overall_bones_3D_errors.shape)
+worst_frame = np.unravel_index(np.nanargmax(overall_joints_repr_error, axis=None), overall_joints_repr_error.shape)
 # get the index of the max value of the 6D array
 
 print("worst_frame : " + str(worst_frame))
-print("worst frame error : ",overall_bones_3D_errors[worst_frame])
+print("worst frame error : ",overall_joints_repr_error[worst_frame])
 #merge axis 0, 1, 2, 3, 4 in overall_bones_3D_errors
-per_bone_errors = np.reshape(overall_bones_3D_errors, (-1, len(bone_names_in_bones_list)))
+per_joint_errors = np.reshape(overall_joints_repr_error, (-1, len(cfg.HALL6_DATA.JOINTS)))
 #remove nan values
-per_bone_errors = per_bone_errors[~np.isnan(per_bone_errors).any(axis=1)]
-print("per_bone_errors : " + str(per_bone_errors.shape))
-print("per_bone_errors.shape : " + str(per_bone_errors.shape))
-# violin plot of per bone errors, avoiding nan values
+per_joint_errors = per_joint_errors[~np.isnan(per_joint_errors).any(axis=1)]
+print("per_joint_errors : " + str(per_joint_errors.shape))
+print("per_joint_errors.shape : " + str(per_joint_errors.shape))
+
+mean_overall_joint_errors = ["{:.1f}".format(i) for i in mean_overall_joint_errors]
+mean_overall_joint_errors = [str(i) if len(i.split(".")[0])<=2 else "{:.2e}".format(float(i)) for i in mean_overall_joint_errors]
+
+global_mean_overall_joint_errors = np.nanmean(per_joint_errors)
+global_mean_overall_joint_errors = "{:.1f}".format(global_mean_overall_joint_errors)
+global_mean_overall_joint_errors = str(global_mean_overall_joint_errors) if len(global_mean_overall_joint_errors.split(".")[0])<=2 else "{:.2e}".format(float(global_mean_overall_joint_errors))
+
+worst_reprojection_error = overall_joints_repr_error[worst_frame]
+worst_reprojection_error = "{:.1f}".format(worst_reprojection_error)
+worst_reprojection_error = str(worst_reprojection_error) if len(worst_reprojection_error.split(".")[0])<=2 else "{:.2e}".format(float(worst_reprojection_error))
+
+
+to_print = mean_overall_joint_errors + [global_mean_overall_joint_errors]+ [worst_reprojection_error]
+#convert all elements in to_print to string
+to_print = [str(elem) for elem in to_print]
+print(" & ".join(to_print))
+
+
+# violin plot of per joint reprojection errors, avoiding nan values
 fig, ax = plt.subplots(figsize=(10, 10))
-ax.set_title('Violin plot of per bone errors')
-ax.set_ylabel('Error (mm)')
-ax.set_xlabel('Bone')
-ax.set_xticks(np.arange(len(bone_names_in_bones_list)))
-ax.set_xticklabels(bone_names_in_bones_list)
+ax.set_title('Violin plot of reprojection errors (best view),\n while triangulating from 16 views,\n weighted by 2D detector confidences.', fontweight='bold')
+ax.set_ylabel('Error (px)', fontweight='bold')
+ax.set_xlabel('Joints', fontweight='bold')
+
+plt.boxplot(per_joint_errors, showmeans=False, showfliers=False)
+
+#set xticks
+ax.set_xticks(np.arange(len(cfg.HALL6_DATA.JOINTS))+1)
+ax.set_xticklabels(cfg.HALL6_DATA.JOINTS)
+#reduce font size of xticks
+plt.xticks(fontsize=8)
+#write xtick obliquely
+plt.xticks(rotation=45)
+# limit y axis to 0-300
+plt.ylim(0, 30)
+# add y grid
+plt.grid(axis='y')
+#add subticks y axis
+ax.tick_params(axis='y', which='minor', bottom=False)
+#add a vertical line for each sub-tick
+for i in range(0, 301, 10):
+    plt.axhline(y=i, color='grey', linestyle='-', linewidth=0.5)
+
+
 #plot violin with plt
-plt.violinplot(per_bone_errors, showmeans=True)
+plt.violinplot(per_joint_errors, showmeans=True, showextrema=False)
 
 plt.show()
