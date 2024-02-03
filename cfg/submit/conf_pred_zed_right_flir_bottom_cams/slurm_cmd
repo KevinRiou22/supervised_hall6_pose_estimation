@@ -21,7 +21,7 @@
 # /!\ Attention, "multithread" fait reference à l'hyperthreading dans la terminologie Slurm
 ##SBATCH --hint=nomultithread         # hyperthreading desactive
 #SBATCH --qos=qos_gpu-t4
-#SBATCH --time=4-00:00:00
+#SBATCH --time=2-00:00:00
 #SBATCH --output=out/submit/conf_pred_zed_right_flir_bottom_cams/gpu_%j.out      # nom du fichier de sortie
 #SBATCH --error=err/submit/conf_pred_zed_right_flir_bottom_cams/gpu_%j.err       # nom du fichier d'erreur (ici commun avec la sortie)
 
