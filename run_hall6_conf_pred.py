@@ -461,6 +461,14 @@ if True:
                 h36_inp[:, pad:pad + 1, :, :, :], sub_action, view_list, debug=False,
                 confidences=confs[:, pad:pad + 1].permute(0, 1, 3, 4, 2).contiguous())
 
+            # detect nan in out and create a mask
+
+            mask = torch.isnan(out).any(dim=-1).any(dim=-1).any(dim=-1).any(dim=-1)  # (B, T, N)
+            #remove nans from out
+            out = out[~mask]
+            #remove nan from sub_action
+            sub_action = np.array(sub_action)[~mask].tolist()
+
             #loss = mpjpe(out, pos_gt[:, pad:pad + 1])
             loss = bone_len_loss(gt_bones_lens, out.permute(0, 1, 4, 2, 3).contiguous(), bones.to(out.device), cfg.HALL6_DATA.SUBJECTS_TRAIN,batch_subjects=sub_action, cfg=cfg,std_bones_len_prior=bones_stds.to(out.device))
             if summary_writer is not None:
@@ -698,6 +706,14 @@ if True:
                                                                    out[i, 0, :, :, v].cpu(),
                                                                    inp[:, :, :, -1:, :][i, pad, :, :, v].cpu()], dim=-1)
                                             data_npy[subject][action][v].append(curr_data)
+
+                                    #detect nan in out and create a mask
+                                    mask = torch.isnan(out).any(dim=-1).any(dim=-1).any(dim=-1).any(dim=-1)
+                                    # remove nan from out
+                                    out = out[~mask]
+                                    # remove nan from inputs_3d_gt
+                                    inputs_3d_gt = inputs_3d_gt[~mask]
+                                    sub_action = np.array(sub_action)[~mask].tolist()
 
                                     #end build data npz
                                     idx_eval +=1

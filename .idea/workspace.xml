@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="ac046960-5dcf-4cb0-81df-44a7fc8c1c11" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/loss.py" beforeDir="false" afterPath="$PROJECT_DIR$/common/loss.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/run_hall6_conf_pred.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_hall6_conf_pred.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
