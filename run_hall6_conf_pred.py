@@ -461,15 +461,10 @@ if True:
                 h36_inp[:, pad:pad + 1, :, :, :], sub_action, view_list, debug=False,
                 confidences=confs[:, pad:pad + 1].permute(0, 1, 3, 4, 2).contiguous())
 
-
-
-            if cfg.TRAIN.USE_INTER_LOSS:
-                for i in range(len(other_out)):
-                    other_out[i] = other_out[i].permute(0, 1, 4, 2, 3).contiguous()  # (B, T, N, J. C)
             #loss = mpjpe(out, pos_gt[:, pad:pad + 1])
             loss = bone_len_loss(gt_bones_lens,out.permute(0, 1, 4, 2, 3).contiguous(), bones.to(out.device), cfg.HALL6_DATA.SUBJECTS_TRAIN,batch_subjects=sub_action, cfg=cfg,std_bones_len_prior=bones_stds.to(out.device))
             if summary_writer is not None:
-                summary_writer.add_scalar("mpjpe/iter", loss, iters)
+                summary_writer.add_scalar("bone_loss/iter", loss, iters)
 
 
 
@@ -624,14 +619,11 @@ if True:
                                     confs = confs.permute(0, 1, 4, 2, 3).contiguous()
 
                                     out, stats_sing_values, _ = HumanCam.p2d_cam3d_batch_with_root(
-                                        h36_inp[:, pad:pad + 1], sub_action, view_list, debug=False,
+                                        h36_inp[:, pad:pad + 1][...,views_idx], sub_action, views_idx, debug=False,
                                         confidences=confs[:, pad:pad + 1].permute(0, 1, 3, 4, 2).contiguous().to(h36_inp.device))
-                                    if not cfg.TRAIN.PREDICT_ROOT:
-                                        out[:, :, 0] = 0
-                                        prj_out_abs_to_2d = HumanCam.p3d_im2d_batch(out+p3d_root[...,  views_idx].to(out.device), sub_action, view_list, with_distor=True, flip=batch_flip, gt_2d=inputs_2d_gt[:, pad:pad + 1,:, :].to(out.device))
-                                    else:
-                                        absolute_path_pred.append(out[:, :, :1])
-                                        prj_out_abs_to_2d = HumanCam.p3d_im2d_batch(out, sub_action, view_list, with_distor=True, flip=batch_flip, gt_2d=inputs_2d_gt[:, pad:pad + 1,:, :].to(out.device))
+
+                                    absolute_path_pred.append(out[:, :, :1])
+                                    prj_out_abs_to_2d = HumanCam.p3d_im2d_batch(out, sub_action, views_idx, with_distor=True, flip=batch_flip, gt_2d=inputs_2d_gt[:, pad:pad + 1,:, :].to(out.device))
 
 
                                     if id_eval == 0:
@@ -708,11 +700,6 @@ if True:
                                             data_npy[subject][action][v].append(curr_data)
 
                                     #end build data npz
-
-
-
-
-
                                     idx_eval +=1
                                     loss = 0
                                     bone_loss = 0
@@ -720,7 +707,7 @@ if True:
                                         loss_view_tmp = eval_metrc(cfg, out[..., idx_], inputs_3d_gt[..., view_idx])
                                         #bone_pred_len = bone_losses(out[..., idx_:idx_+1].permute((0,1,4,2,3)).contiguous(), bones.cpu(), cfg.HALL6_DATA.SUBJECTS_TEST, batch_subjects=sub_action, cfg=cfg)[0]
                                         #bone_error = torch.mean(torch.abs(torch.squeeze(bone_pred_len)-bones_means.cpu()))
-                                        bone_error = per_participant_bone_len_loss = bone_len_loss(gt_bones_lens,out.permute(0, 1, 4, 2, 3).contiguous(), bones.to(out.device),cfg.HALL6_DATA.SUBJECTS_TRAIN,batch_subjects=sub_action,cfg=cfg,std_bones_len_prior=bones_stds.to(out.device))
+                                        bone_error = bone_len_loss(gt_bones_lens,out.permute(0, 1, 4, 2, 3).contiguous(), bones.to(out.device),cfg.HALL6_DATA.SUBJECTS_TRAIN,batch_subjects=sub_action,cfg=cfg,std_bones_len_prior=bones_stds.to(out.device))
                                         loss += loss_view_tmp.item()
                                         bone_loss += bone_error.item()
                                         action_mpjpe[act][num_view - 1][idx_] += loss_view_tmp.item() * inputs_3d_gt.shape[0]

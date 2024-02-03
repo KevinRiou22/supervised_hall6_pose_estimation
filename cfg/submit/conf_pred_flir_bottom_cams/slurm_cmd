@@ -36,5 +36,5 @@ module purge
 cd $WORK/Human_Pose_Estimation/supervised_hall6_pose_estimation
 module load pytorch-gpu/py3/1.13.0
 
-python run_hall6_conf_pred_flir_bottom_cams.py --cfg ./cfg/submit/conf_pred_flir_bottom_cams/cfg.yaml  --ckpt_path ./checkpoint/submit/conf_pred_flir_bottom_cams/ --log_path ./log/submit/conf_pred_flir_bottom_cams/  --visu_path ./visu/submit/conf_pred_flir_bottom_cams/
+python run_hall6_conf_pred.py --cfg ./cfg/submit/conf_pred_flir_bottom_cams/cfg.yaml  --ckpt_path ./checkpoint/submit/conf_pred_flir_bottom_cams/ --log_path ./log/submit/conf_pred_flir_bottom_cams/  --visu_path ./visu/submit/conf_pred_flir_bottom_cams/
 
