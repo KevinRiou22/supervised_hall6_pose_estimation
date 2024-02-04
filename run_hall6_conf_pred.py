@@ -708,12 +708,13 @@ if True:
                                             data_npy[subject][action][v].append(curr_data)
 
                                     #detect nan in out and create a mask
-                                    mask = torch.isnan(out).any(dim=-1).any(dim=-1).any(dim=-1).any(dim=-1)
+                                    #mask = torch.isnan(out).any(dim=-1).any(dim=-1).any(dim=-1).any(dim=-1)
                                     # remove nan from out
-                                    out = out[~mask]
+                                    #out = out[~mask]
                                     # remove nan from inputs_3d_gt
-                                    inputs_3d_gt = inputs_3d_gt[~mask]
-                                    sub_action = np.array(sub_action)[~mask].tolist()
+
+                                    #inputs_3d_gt = inputs_3d_gt[~mask]
+                                    #sub_action = np.array(sub_action)[~mask].tolist()
 
                                     #end build data npz
                                     idx_eval +=1
