@@ -385,6 +385,50 @@ def triangulation_torch(pts, pmat):
     Xs = Xs.view(batch, njoint, 3)
     return Xs, stats_sing_values
 
+def weighted_triangulation_torch(pts, pmat, weights, use_thr=False, threshold=0.4):
+    '''
+    pts: (batch, njoints, nview, 2)
+    pmat: (nview, 3, 4) or (batch, nview, 3, 4)
+    weights: (batch, njoints, nview)
+    '''
+
+    dev = pts.device
+
+    batch, njoint, nview = pts.shape[0:3]
+
+    if len(pmat.shape) == 3:
+        pmat = pmat.to(dev).view(1, nview, 3, 4).repeat(batch * njoint, 1, 1, 1)
+    elif len(pmat.shape) == 4:
+        pmat = pmat.to(dev).view(batch, 1, nview, 3, 4).repeat(1, njoint, 1, 1, 1).view(batch * njoint, nview, 3, 4)
+
+    pts_compact = pts.view(batch * njoint, nview, 2, 1)
+    # print(pts_compact.shape)
+    # print(pmat.shape)
+    # print((pmat[:, :, 2:3]).shape)
+    A = pmat[:, :, 2:3] * pts_compact
+    A -= pmat[:, :, :2]
+    A = A.view(-1, 2 * nview, 4)
+    # weighted_A = A * torch.squeeze((weights.view(batch * njoint, nview, 1)))
+    #print(weights.shape)
+
+    cst=0.0
+    # print(type(cst))
+    # print(type(threshold))
+    # print(weights.type())
+    # print()
+    if use_thr:
+        weights = torch.where(weights > torch.tensor(threshold).to(weights.device), weights, torch.tensor(cst).to(weights.device))  # 0.25
+    weights = weights.view(batch * njoint, nview, 1, 1).repeat(1, 1, 2, 4).reshape(batch * njoint, 2 * nview, 4)
+    norm_a = torch.norm(A, p='fro', dim=-1, keepdim=True).repeat(1, 1, 4)
+
+    weights = weights / norm_a
+    weighted_A = A * torch.squeeze(weights)
+
+    u, d, vt = torch.linalg.svd(weighted_A)
+    Xs = vt[:, -1, 0:3] / vt[:, -1, 3:]
+
+    Xs = Xs.view(batch, njoint, 3)
+    return Xs
 
 def flip_data(batch_data):
     data_leaf = batch_data.detach()
@@ -526,7 +570,7 @@ class Human36mCamera(MocapDataset):
         else:
             return trj_c3d, trj_w3d
 
-    def p2d_cam3d_batch(self, p2d, subject_list, view_list, debug=False, extri=None, proj=None, is_predicted_params=True):
+    def p2d_cam3d_batch(self, p2d, subject_list, view_list, debug=False, extri=None, proj=None, is_predicted_params=True, use_thr=False, thr=0.4, confidences=None):
         '''
         p2d: (B, T,J, C, N)
         '''
@@ -552,14 +596,22 @@ class Human36mCamera(MocapDataset):
         if self.cfg.TRAIN.LEARN_CAM_PARM:
             prj_mat = torch.cat(prj_mat, dim=0)
             exi_mat = torch.cat(exi_mat, dim=0)
-        trj_w3d, stats_sing_values = triangulation_torch(p2d.view(-1, J, C, N).permute(0, 1, 3, 2).contiguous(), prj_mat[:, view_list,...]) #(B*T, J, 3)
+        if confidences == None:
+            trj_w3d, stats_sing_values = triangulation_torch(p2d.view(-1, J, C, N).permute(0, 1, 3, 2).contiguous(),prj_mat[:, :, ...])  # (B*T, J, 3)
+        else:
+            trj_w3d = weighted_triangulation_torch(
+                p2d.view(-1, J, C, N).permute(0, 1, 3, 2).contiguous().to(p2d.device),
+                prj_mat[:, view_list, ...].to(p2d.device),
+                weights=confidences.view(-1, J, 1, N).permute(0, 1, 3, 2).contiguous().to(p2d.device), use_thr=use_thr,
+                threshold=thr)  # (B*T, J, 3) #0.25
+            stats_sing_values = {}
         trj_w3d_homo = torch.cat((trj_w3d, torch.ones(trj_w3d.shape[0], 17, 1).to(p2d.device)), dim = -1)
         trj_c3d = torch.einsum('mnkc,mjc->mnjk', exi_mat[:,view_list, ...], trj_w3d_homo) #(B*T, N, J, 3)
         trj_c3d = trj_c3d.view(B, T, N, J, 3).permute(0, 1, 3, 4, 2).contiguous() ##B, T, J, 3, N)
         trj_c3d = trj_c3d - trj_c3d[:,:,:1]
         return trj_c3d, stats_sing_values, trj_w3d
 
-    def p2d_cam3d_batch_with_root(self, p2d, subject_list, view_list, debug=False, extri=None, proj=None, is_predicted_params=True):
+    def p2d_cam3d_batch_with_root(self, p2d, subject_list, view_list, debug=False, extri=None, proj=None, is_predicted_params=True, use_thr=False, thr=0.4, confidences=None):
         '''
         p2d: (B, T,J, C, N)
         '''
@@ -585,8 +637,15 @@ class Human36mCamera(MocapDataset):
         if self.cfg.TRAIN.LEARN_CAM_PARM:
             prj_mat = torch.cat(prj_mat, dim=0)
             exi_mat = torch.cat(exi_mat, dim=0)
-        trj_w3d, stats_sing_values = triangulation_torch(p2d.view(-1, J, C, N).permute(0, 1, 3, 2).contiguous(), prj_mat[:, view_list,...]) #(B*T, J, 3)
-
+        if confidences == None:
+            trj_w3d, stats_sing_values = triangulation_torch(p2d.view(-1, J, C, N).permute(0, 1, 3, 2).contiguous(), prj_mat[:, :,...]) #(B*T, J, 3)
+        else:
+            trj_w3d = weighted_triangulation_torch(
+                p2d.view(-1, J, C, N).permute(0, 1, 3, 2).contiguous().to(p2d.device),
+                prj_mat[:, :, ...].to(p2d.device),
+                weights=confidences.view(-1, J, 1, N).permute(0, 1, 3, 2).contiguous().to(p2d.device), use_thr=use_thr,
+                threshold=thr)  # (B*T, J, 3) #0.25
+            stats_sing_values = {}
         # if self.cfg.TRAIN.PREDICT_ROOT:
         #     root_pred = trj_w3d[:, :1]
         #     root_pred_clipped = torch.maximum(torch.minimum(root_pred, torch.ones_like(root_pred) * 10),  torch.ones_like(root_pred) * (-10))

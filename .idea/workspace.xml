@@ -2,13 +2,23 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ac046960-5dcf-4cb0-81df-44a7fc8c1c11" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/cfg/submit/conf_pred_h36m/cfg.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cfg/submit/conf_pred_h36m/slurm_cmd" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_hall6_conf_pred.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_hall6_conf_pred.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/h36m_dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/common/h36m_dataset.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/loss.py" beforeDir="false" afterPath="$PROJECT_DIR$/common/loss.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -21,16 +31,17 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/kevin-riou/Documents/supervised_hall6_pose_estimation/cfg/submit&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "/home/kevin-riou/Documents/supervised_hall6_pose_estimation/cfg/submit"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/cfg/submit" />
+      <recent name="$PROJECT_DIR$/data" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/common/multiview_model" />
     </key>
