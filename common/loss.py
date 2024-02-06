@@ -768,6 +768,7 @@ def bone_len_mae(bone_priors, out, bones, subjects_, batch_subjects=None, avg_ov
             # input()
             if remove_fails_from_stats:
                 mae = torch.where(mae > prior_len/2, torch.zeros_like(mae)*float('nan'), mae)
+                print("removed fails from stats")
             loss.append(mae)
     if avg_ov_frames:
         return torch.mean(torch.cat(loss), dim=1)

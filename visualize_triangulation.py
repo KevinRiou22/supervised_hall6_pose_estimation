@@ -11,6 +11,7 @@ from common.arguments import parse_args
 from common.config import reset_config, update_config
 from collections import OrderedDict
 import matplotlib
+from matplotlib.gridspec import GridSpec
 
 args = parse_args()
 update_config(args.cfg)  ###config file->cfg
@@ -31,6 +32,14 @@ data_npy = np.load(my_data_pth, allow_pickle=True)
 data_npy = dict(data_npy)
 
 
+def white_balance(img):
+    result = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    avg_a = np.average(result[:, :, 1])
+    avg_b = np.average(result[:, :, 2])
+    result[:, :, 1] = result[:, :, 1] - ((avg_a - 128) * (result[:, :, 0] / 255.0) * 1.1)
+    result[:, :, 2] = result[:, :, 2] - ((avg_b - 128) * (result[:, :, 0] / 255.0) * 1.1)
+    result = cv2.cvtColor(result, cv2.COLOR_LAB2BGR)
+    return result
 
 def read_video_cv2(video_path, frame_range=[0, 10]):
     cap = cv2.VideoCapture(video_path)
@@ -42,9 +51,8 @@ def read_video_cv2(video_path, frame_range=[0, 10]):
             # rgb to bgr for opencv
             if i>=frame_range[0] and i<frame_range[1]:
                 frame = frame[:, :, ::-1]
-
                 arr = np.array(frame)
-                all.append(arr)
+                all.append(white_balance(arr))
             i += 1
         else:
              break
@@ -137,10 +145,17 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
             cam = cams[view_idx]
             cams_videos.append(read_video_cv2('data/images/{}/{}/{}/{}/video.avi'.format(k_a[0], operator_str, k_a[1], cam), [frame,frame+1]))
         print(k_a)
+
+
+        # save image of view index 0 and 1
         fig1, axs = plt.subplots(4, 4)
+        # set size of the figure
+        fig1.set_size_inches(18.5, 10.5)
         # remove x and y ticks and labels
         for ax in axs.flat:
             ax.set(xticks=[], yticks=[])
+        # remove spacings between subplots
+        plt.subplots_adjust(wspace=-0.3)
 
         #fig2, axs_3D = plt.subplots(4, 4)
         # # remove x and y ticks and labels
@@ -149,14 +164,23 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
 
         i = 0
         figs_3D = []
+
         for idx, view_idx in enumerate(cfg.HALL6_DATA.TEST_CAMERAS):
             print(v_a[idx].shape)
             #print(v_a[v][0,:, :2])
             #print(v_a[v][0, :, 2:4])
-            axs[i // 4, i % 4].set_title(cams[view_idx]+" / "+str(idx))
+            #axs[i // 4, i % 4].set_title(cams[view_idx]+" / "+str(idx))
+            conf_2D = v_a[idx][frame, :, -1]
+            print("conf_2D : " + str(conf_2D))
+            axs[i // 4, i % 4].set_title("Id: {}, 2DConf : {:.1f}, DynConf : {}".format(str(idx), np.mean(conf_2D), "?"), fontsize=12, fontweight='bold')
             first_frame = cams_videos[i][0]
             # plot first frame in subplot i
-            axs[i // 4, i % 4].imshow(first_frame)
+            if "r" in cams[view_idx] or "l" in cams[view_idx]:
+                axs[i // 4, i % 4].imshow(first_frame)
+            else:
+                # plot frame in subplot i with a larger size
+                axs[i // 4, i % 4].imshow(first_frame)
+                #axs[i // 4, i % 4].imshow(cv2.resize(first_frame, (1920, 1080)))
 
 
             h_inp_2d = v_a[idx][frame,:, 2]
@@ -196,5 +220,7 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
                 axs_3D.set_zlim3d([3, 5])
 
             i += 1
+        #save fig1 without border in image
+        fig1.savefig("data/images/{}/{}/{}/frame_{}.png".format(k_a[0], operator_str, k_a[1], frame), pad_inches=0)
         plt.legend()
         plt.show()

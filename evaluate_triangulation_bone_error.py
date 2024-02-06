@@ -173,7 +173,7 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
             overall_bones_3D_errors[operator_id, task_id, example_id, idx, :bones_err.shape[1], :] = torch.squeeze(bones_err).detach().cpu().numpy().reshape(-1, len(bone_names_in_bones_list))*1000
 
 failed_triangulations = 100*failed_triangulations/total_triangulations
-
+print("failed_triangulations : " + str(failed_triangulations))
 #get the mean of 3D errors for each subject, avoiding nan values
 mean_overall_bones_3D_errors = np.nanmean(overall_bones_3D_errors, axis=(1, 2, 3, 4, 5))
 print("mean bone error for each subject : " + str(mean_overall_bones_3D_errors))

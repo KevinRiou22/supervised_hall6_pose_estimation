@@ -212,6 +212,7 @@ config.TEST.CHECKPOINT = "./checkpoint/best_t7_h36m_2.bin"
 config.TEST.NUM_VIEWS = [4]
 config.TEST.NUM_FRAMES = [1]
 config.TEST.BATCH_SIZE = 360
+config.TEST.TEST_TRAIN_SUB=False
 config.TEST.METRIC = "mpjpe" #['mpjpe', 'p_mpjpe', 'n_mpjpe']
 config.TEST.METRIC_ALIGN_R = True
 config.TEST.METRIC_ALIGN_T = True
