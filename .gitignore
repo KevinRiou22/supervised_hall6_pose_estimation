@@ -6,3 +6,4 @@ visu/
 data/*
 common/__pycache__/*
 data_archive/*
+*.bin

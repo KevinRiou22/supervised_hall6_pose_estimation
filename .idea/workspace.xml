@@ -2,16 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ac046960-5dcf-4cb0-81df-44a7fc8c1c11" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/cfg/submit/cfg_triangulate_zed_left_cams_not_weighted.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cfg/submit/conf_pred_h36m/eval_test_sub/cfg.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cfg/submit/conf_pred_h36m/eval_test_sub/slurm_cmd" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cfg/submit/conf_pred_h36m/eval_train_sub/cfg.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cfg/submit/conf_pred_h36m/eval_train_sub/slurm_cmd" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/common/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/loss.py" beforeDir="false" afterPath="$PROJECT_DIR$/common/loss.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/evaluate_triangulation_bone_error.py" beforeDir="false" afterPath="$PROJECT_DIR$/evaluate_triangulation_bone_error.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/visualize_triangulation.py" beforeDir="false" afterPath="$PROJECT_DIR$/visualize_triangulation.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,17 +27,17 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/kevin-riou/Documents/supervised_hall6_pose_estimation/cfg/submit&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "/home/kevin-riou/Documents/supervised_hall6_pose_estimation"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/cfg/submit" />
       <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/cfg/submit" />
       <recent name="$PROJECT_DIR$/cfg/submit/conf_pred_h36m/eval_train_sub" />
       <recent name="$PROJECT_DIR$/cfg/submit/conf_pred_h36m/eval_test_sub" />
       <recent name="$PROJECT_DIR$/cfg/submit/conf_pred_h36m" />
