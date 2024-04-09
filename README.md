@@ -2,6 +2,10 @@
 ## downlod the data
 create a folder named "data" in the root directory of the project, and download the data from the following link (dwd everything in the "data" folder):
 https://uncloud.univ-nantes.fr/index.php/s/XP2cqPccBEdS3qC
+## install requirements
+```bash
+pip install -r requirements.txt
+```
 ## triangulate 3D poses from 2D poses
 ```bash
 python triangulate_hall6.py --cfg ./cfg/submit/cfg_triangulate_16_cams.yaml  --triang_out_name triangulated_3D_16_cams
@@ -14,10 +18,15 @@ triang_out_name: containing the triangulated 3D poses, as well as the input 2D p
 python evaluate_triangulation.py --cfg ./cfg/submit/cfg_triangulate_16_cams.yaml --data_name triangulated_3D_16_cams
 ``` 
 
-## train 3D pose estimators
-Baseline 1
+## train 3D pose estimators on the data (ongoing work)
+### create experiment dirs
 ```bash
+sh create_exp_dirs.sh
+```
 
+### train the baseline 1
+```bash
+python run_hall6.py --cfg ./cfg/submit/baseline1/absolute/cfg.yaml  --ckpt_path ./checkpoint/submit/baseline1/absolute/main/ --log_path ./log/submit/baseline1/absolute/main/  --visu_path ./visu/submit/baseline1/absolute/main/
 ```
 
 Visualize the poses for the first example in the validation set, for epoch 0 :
