@@ -50,58 +50,58 @@ resolutions={}
 for cam_dict in cameras_intrinsic_params:
     resolutions[cam_dict['id']] = [cam_dict['res_w'], cam_dict['res_h']]
 
-f = open('data/bones_length_hall6_2d_pose_structure.json', )
-gt_bones_lens = json.load(f)
-bone_names_h36m = cfg.HALL6_DATA.BONES_NAMES
-bones_h36m = cfg.HALL6_DATA.BONES
-bones_means_ = []
-bones = []
-count_subj=0
-symmetry_bones = [[],[]]
-bone_names_in_bones_list = []
-for sub_id in gt_bones_lens.keys():
-    sub_processed = gt_bones_lens[sub_id]['h36m']
-    print(sub_processed)
-    bone_id = 0
-    bones_means_.append([])
-    bone_id_in_bones_list = 0
-    for bone_name in bone_names_h36m:
-        if bone_name in ['Head', 'LeftShoulder', 'RightShoulder']:
-            bone_id += 1
-            continue
-        if bone_name in sub_processed.keys():
-            bones_means_[-1].append(sub_processed[bone_name]/100)
-            if count_subj == 0:
-                bones.append(bones_h36m[bone_id])
-                bone_names_in_bones_list.append(bone_name)
-                if bone_id in cfg.HALL6_DATA.BONES_SYMMETRY[0]:
-                    symmetry_bones[0].append(bone_id_in_bones_list)
-                if bone_id in cfg.HALL6_DATA.BONES_SYMMETRY[1]:
-                    symmetry_bones[1].append(bone_id_in_bones_list)
-            bone_id_in_bones_list += 1
-        if bone_name in ['r_ear_r_eye', 'l_ear_l_eye', 'r_eye_nose', 'l_eye_nose']:
-            bones_means_[-1].append(0)
-            if count_subj == 0:
-                bones.append(bones_h36m[bone_id])
-                bone_names_in_bones_list.append(bone_name)
-                if bone_id in cfg.HALL6_DATA.BONES_SYMMETRY[0]:
-                    symmetry_bones[0].append(bone_id_in_bones_list)
-                if bone_id in cfg.HALL6_DATA.BONES_SYMMETRY[1]:
-                    symmetry_bones[1].append(bone_id_in_bones_list)
-            bone_id_in_bones_list += 1
-        bone_id +=1
-    count_subj +=1
-cfg.HALL6_DATA.BONES_SYMMETRY = symmetry_bones
-print("bone_names_in_bones_list : " + str(bone_names_in_bones_list))
-print("cfg.HALL6_DATA.BONES_SYMMETRY : " + str(cfg.HALL6_DATA.BONES_SYMMETRY))
-torch.from_numpy(np.array(bones_means_))#.cuda()
-bones_means = torch.from_numpy(np.mean(np.array(bones_means_), axis=(0)))#.cuda()
-bones = torch.from_numpy(np.array(bones))#.cuda()
-print("bones_means : " + str(bones_means))
-print("bones : " + str(bones))
-bones_stds = torch.from_numpy(np.std(np.array(bones_means_), axis=(0)))#.cuda()
+# f = open('data/bones_length_hall6_2d_pose_structure.json', )
+# gt_bones_lens = json.load(f)
+# bone_names_h36m = cfg.HALL6_DATA.BONES_NAMES
+# bones_h36m = cfg.HALL6_DATA.BONES
+# bones_means_ = []
+# bones = []
+# count_subj=0
+# symmetry_bones = [[],[]]
+# bone_names_in_bones_list = []
+# for sub_id in gt_bones_lens.keys():
+#     sub_processed = gt_bones_lens[sub_id]['h36m']
+#     print(sub_processed)
+#     bone_id = 0
+#     bones_means_.append([])
+#     bone_id_in_bones_list = 0
+#     for bone_name in bone_names_h36m:
+#         if bone_name in ['Head', 'LeftShoulder', 'RightShoulder']:
+#             bone_id += 1
+#             continue
+#         if bone_name in sub_processed.keys():
+#             bones_means_[-1].append(sub_processed[bone_name]/100)
+#             if count_subj == 0:
+#                 bones.append(bones_h36m[bone_id])
+#                 bone_names_in_bones_list.append(bone_name)
+#                 if bone_id in cfg.HALL6_DATA.BONES_SYMMETRY[0]:
+#                     symmetry_bones[0].append(bone_id_in_bones_list)
+#                 if bone_id in cfg.HALL6_DATA.BONES_SYMMETRY[1]:
+#                     symmetry_bones[1].append(bone_id_in_bones_list)
+#             bone_id_in_bones_list += 1
+#         if bone_name in ['r_ear_r_eye', 'l_ear_l_eye', 'r_eye_nose', 'l_eye_nose']:
+#             bones_means_[-1].append(0)
+#             if count_subj == 0:
+#                 bones.append(bones_h36m[bone_id])
+#                 bone_names_in_bones_list.append(bone_name)
+#                 if bone_id in cfg.HALL6_DATA.BONES_SYMMETRY[0]:
+#                     symmetry_bones[0].append(bone_id_in_bones_list)
+#                 if bone_id in cfg.HALL6_DATA.BONES_SYMMETRY[1]:
+#                     symmetry_bones[1].append(bone_id_in_bones_list)
+#             bone_id_in_bones_list += 1
+#         bone_id +=1
+#     count_subj +=1
+# cfg.HALL6_DATA.BONES_SYMMETRY = symmetry_bones
+# print("bone_names_in_bones_list : " + str(bone_names_in_bones_list))
+# print("cfg.HALL6_DATA.BONES_SYMMETRY : " + str(cfg.HALL6_DATA.BONES_SYMMETRY))
+# torch.from_numpy(np.array(bones_means_))#.cuda()
+# bones_means = torch.from_numpy(np.mean(np.array(bones_means_), axis=(0)))#.cuda()
+# bones = torch.from_numpy(np.array(bones))#.cuda()
+# print("bones_means : " + str(bones_means))
+# print("bones : " + str(bones))
+# bones_stds = torch.from_numpy(np.std(np.array(bones_means_), axis=(0)))#.cuda()
 
-
+bones = torch.from_numpy(np.array(cfg.H36M_DATA.BONES))
 #enumerate data_npy, keys and values
 reprojection_errors_subjects = [[] for i in range(5)]
 reprojection_errors_examples = []
@@ -135,6 +135,7 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
         bones_3D_errors_examples[-1].append([])
         for idx, view_idx in enumerate(cfg.HALL6_DATA.TEST_CAMERAS):
             cam_resolution = resolutions[cfg.HALL6_DATA.CAMERAS_IDS[view_idx]]
+            print(v_a[idx].shape)
             poses_3D = torch.unsqueeze(torch.unsqueeze(torch.from_numpy(v_a[idx][:1 ,:, 4:7]), 0), -1) #frame, joints, (x,y,z)
             sub_action = [[k_s, k_a]]
             pred_bone_mean, pred_bone_std = bone_losses(poses_3D.permute(0, 1, 4, 2, 3).contiguous()[:, :, :], bones, cfg.HALL6_DATA.SUBJECTS_TRAIN, batch_subjects=sub_action, cfg=cfg)
@@ -142,20 +143,20 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
             # print("bones_means : " + str(bones_means))
             # input()
             sub_triangulated_bones.append(torch.squeeze(pred_bone_mean).detach().cpu().numpy())
-            bones_err = torch.abs(torch.squeeze(pred_bone_mean)-bones_means).detach().cpu().numpy()
-            sub_error_to_measure.append(bones_err)
+            # bones_err = torch.abs(torch.squeeze(pred_bone_mean)-bones_means).detach().cpu().numpy()
+            # sub_error_to_measure.append(bones_err)
     triangulated_bones.append(np.mean(np.array(sub_triangulated_bones), axis=0))
-    error_to_measure.append(np.mean(np.array(sub_error_to_measure), axis=0))
+    #error_to_measure.append(np.mean(np.array(sub_error_to_measure), axis=0))
 
 
 triangulated_bones = np.array(triangulated_bones)
-error_to_measure = np.array(error_to_measure)
+#error_to_measure = np.array(error_to_measure)
 
 print("triangulated_bones : " + str(triangulated_bones))
-print("error_to_measure : " + str(error_to_measure))
+#print("error_to_measure : " + str(error_to_measure))
 print(triangulated_bones.shape)
-print(np.array(bones_means_).shape)
+#print(np.array(bones_means_).shape)
 #print(bones_stds.shape)
-np.save("data/bones_length_hall6_triang_measure_16_cams.npy", triangulated_bones)
-np.save("data/bones_length_hall6_physical_measure_16_cams.npy", np.array(bones_means_))
+np.save("data/bones_length_hall6_triang_measure_16_cams_h36m_struct.npy", triangulated_bones)
+#np.save("data/bones_length_hall6_physical_measure_16_cams.npy", np.array(bones_means_))
 

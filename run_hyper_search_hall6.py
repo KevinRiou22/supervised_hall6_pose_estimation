@@ -853,8 +853,7 @@ def objective(trial):
                     prj_2dpre_to_3d = prj_2dpre_to_3d + p3d_root[:, pad:pad + 1]
                 else:
                     root_pred = prj_2dpre_to_3d[:, :, :1]
-                    root_pred_clipped = torch.maximum(torch.minimum(root_pred, torch.ones_like(root_pred) * 20),
-                                                      torch.ones_like(root_pred) * (-20))
+                    root_pred_clipped = torch.maximum(torch.minimum(root_pred, torch.ones_like(root_pred) * 20), torch.ones_like(root_pred) * (-20))
                     prj_2dpre_to_3d = torch.maximum(
                         torch.minimum(prj_2dpre_to_3d - root_pred, torch.ones_like(prj_2dpre_to_3d) * 1.5),
                         torch.ones_like(prj_2dpre_to_3d) * (-1.5)) + root_pred_clipped

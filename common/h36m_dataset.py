@@ -20,6 +20,7 @@ from common.loss import *
 from common.multiview import Camera, project_3d_points_to_image_plane_without_distortion
 from common.skeleton import Skeleton
 from common.loss import mpjpe
+from structural_triangulation import *
 
 h36m_skeleton = Skeleton(parents=[-1, 0, 1, 2, 3, 4, 0, 6, 7, 8, 9, 0, 11, 12, 13, 14, 12,
                                   16, 17, 18, 19, 20, 19, 22, 12, 24, 25, 26, 27, 28, 27, 30],
@@ -477,7 +478,7 @@ class Human36mCamera(MocapDataset):
                                                    cam['center'],
                                                    cam['radial_distortion'],
                                                    cam['tangential_distortion'])))
-        wd3d_path = './data/data_3d_h36m.npz'
+        wd3d_path = '../2D_3D_pose_setimation//data/data_3d_h36m.npz'
         data_mhf = np.load(wd3d_path, allow_pickle=True)['positions_3d'].item()
         self._data = {}
         for subject, actions in data_mhf.items():
@@ -611,7 +612,7 @@ class Human36mCamera(MocapDataset):
         trj_c3d = trj_c3d - trj_c3d[:,:,:1]
         return trj_c3d, stats_sing_values, trj_w3d
 
-    def p2d_cam3d_batch_with_root(self, p2d, subject_list, view_list, debug=False, extri=None, proj=None, is_predicted_params=True, use_thr=False, thr=0.4, confidences=None):
+    def p2d_cam3d_batch_with_root(self, p2d, subject_list, view_list, debug=False, extri=None, proj=None, is_predicted_params=True, use_thr=False, thr=0.4, confidences=None, use_struct_triang=False, lens=None):
         '''
         p2d: (B, T,J, C, N)
         '''
@@ -639,6 +640,11 @@ class Human36mCamera(MocapDataset):
             exi_mat = torch.cat(exi_mat, dim=0)
         if confidences == None:
             trj_w3d, stats_sing_values = triangulation_torch(p2d.view(-1, J, C, N).permute(0, 1, 3, 2).contiguous(), prj_mat[:, :,...]) #(B*T, J, 3)
+        elif use_struct_triang:
+            for ex_id in p2d.shape[0]:
+                conf = confidences[ex_id, 0].permute(2, 0, 1).contiguous().detach().cpu().numpy()
+                inp_2d = p2d[ex_id, 0].permute(2, 0, 1).contiguous().detach().cpu().numpy()
+                Pose3D_inference(N, create_human_tree(data_type="human36m"), inp_2d , conf, lens, prj_mat[ex_id].detach().cpu().numpy(), "ST", 9)
         else:
             trj_w3d = weighted_triangulation_torch(
                 p2d.view(-1, J, C, N).permute(0, 1, 3, 2).contiguous().to(p2d.device),

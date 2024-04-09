@@ -33,7 +33,7 @@ from common.vis import *
 import json
 
 # dataset_path = '../MHFormer/dataset/data_3d_h36m.npz'
-#dataset_path = "../2D_3D_pose_setimation/data/data_3d_h36m.npz"
+dataset_path = "./data/data_3d_h36m.npz"
 set_seed()
 
 args = parse_args()
@@ -49,9 +49,9 @@ HumanCam = Human36mCamera(cfg)
 keypoints = {}
 for sub in [1, 5, 6, 7, 8, 9, 11]:
     if cfg.H36M_DATA.P2D_DETECTOR == 'cpn' or cfg.H36M_DATA.P2D_DETECTOR == 'gt':
-        data_pth = '../2D_3D_pose_setimation/data/h36m_sub{}.npz'.format(sub)
+        data_pth = 'data/h36m_sub{}.npz'.format(sub)
     elif cfg.H36M_DATA.P2D_DETECTOR == 'ada_fuse':
-        data_pth = '../2D_3D_pose_setimation/data/h36m_sub{}_ada_fuse.npz'.format(sub)
+        data_pth = 'data/h36m_sub{}_ada_fuse.npz'.format(sub)
 
     keypoint = np.load(data_pth, allow_pickle=True)
     lst = keypoint.files
@@ -64,26 +64,41 @@ joints_left, joints_right = [kps_left, kps_right]
 
 # HumanData = Human36mDataset(cfg, keypoints)
 # HumanCamData = Human36mCamDataset(keypoints)
+if cfg.TEST.TEST_TRAIN_SUB:
+    N_frame_action_dict = {}
+    actions=[]
+    for sub in [1, 5, 6, 7, 8, 9, 11]:
+        n_act_sub=0
+        for action in keypoints['S{}'.format(sub)].keys():
+            n_frame_current_ex=keypoints['S{}'.format(sub)][action][0].shape[0]
+            print('S{}'.format(sub), action, n_frame_current_ex)
+            if 'S{}'.format(sub) in cfg.H36M_DATA.SUBJECTS_TEST:
+                print('If : S{}'.format(sub), action, n_frame_current_ex)
+                #input()
+                N_frame_action_dict[n_frame_current_ex] = action
+                actions.append(action)
+            n_act_sub+=1
+        print('S{}:{}'.format(sub,n_act_sub))
+else:
+    N_frame_action_dict = {
+        2699: 'Directions', 2356: 'Directions', 1552: 'Directions',
+        5873: 'Discussion', 5306: 'Discussion', 2684: 'Discussion', 2198: 'Discussion',
+        2686: 'Eating', 2663: 'Eating', 2203: 'Eating', 2275: 'Eating',
+        1447: 'Greeting', 2711: 'Greeting', 1808: 'Greeting', 1695: 'Greeting',
+        3319: 'Phoning', 3821: 'Phoning', 3492: 'Phoning', 3390: 'Phoning',
+        2346: 'Photo', 1449: 'Photo', 1990: 'Photo', 1545: 'Photo',
+        1964: 'Posing', 1968: 'Posing', 1407: 'Posing', 1481: 'Posing',
+        1529: 'Purchases', 1226: 'Purchases', 1040: 'Purchases', 1026: 'Purchases',
+        2962: 'Sitting', 3071: 'Sitting', 2179: 'Sitting', 1857: 'Sitting',
+        2932: 'SittingDown', 1554: 'SittingDown', 1841: 'SittingDown', 2004: 'SittingDown',
+        4334: 'Smoking', 4377: 'Smoking', 2410: 'Smoking', 2767: 'Smoking',
+        3312: 'Waiting', 1612: 'Waiting', 2262: 'Waiting', 2280: 'Waiting',
+        2237: 'WalkDog', 2217: 'WalkDog', 1435: 'WalkDog', 1187: 'WalkDog',
+        1703: 'WalkTogether', 1685: 'WalkTogether', 1360: 'WalkTogether', 1793: 'WalkTogether',
+        1611: 'Walking', 2446: 'Walking', 1621: 'Walking', 1637: 'Walking',
+    }
 
-N_frame_action_dict = {
-    2699: 'Directions', 2356: 'Directions', 1552: 'Directions',
-    5873: 'Discussion', 5306: 'Discussion', 2684: 'Discussion', 2198: 'Discussion',
-    2686: 'Eating', 2663: 'Eating', 2203: 'Eating', 2275: 'Eating',
-    1447: 'Greeting', 2711: 'Greeting', 1808: 'Greeting', 1695: 'Greeting',
-    3319: 'Phoning', 3821: 'Phoning', 3492: 'Phoning', 3390: 'Phoning',
-    2346: 'Photo', 1449: 'Photo', 1990: 'Photo', 1545: 'Photo',
-    1964: 'Posing', 1968: 'Posing', 1407: 'Posing', 1481: 'Posing',
-    1529: 'Purchases', 1226: 'Purchases', 1040: 'Purchases', 1026: 'Purchases',
-    2962: 'Sitting', 3071: 'Sitting', 2179: 'Sitting', 1857: 'Sitting',
-    2932: 'SittingDown', 1554: 'SittingDown', 1841: 'SittingDown', 2004: 'SittingDown',
-    4334: 'Smoking', 4377: 'Smoking', 2410: 'Smoking', 2767: 'Smoking',
-    3312: 'Waiting', 1612: 'Waiting', 2262: 'Waiting', 2280: 'Waiting',
-    2237: 'WalkDog', 2217: 'WalkDog', 1435: 'WalkDog', 1187: 'WalkDog',
-    1703: 'WalkTogether', 1685: 'WalkTogether', 1360: 'WalkTogether', 1793: 'WalkTogether',
-    1611: 'Walking', 2446: 'Walking', 1621: 'Walking', 1637: 'Walking',
-}
-
-actions = ['Directions', 'Discussion', 'Eating', 'Greeting', 'Phoning', 'Photo', 'Posing', 'Purchases', 'Sitting',
+    actions = ['Directions', 'Discussion', 'Eating', 'Greeting', 'Phoning', 'Photo', 'Posing', 'Purchases', 'Sitting',
            'SittingDown', 'Smoking', 'Waiting', 'WalkDog', 'WalkTogether', 'Walking']
 train_actions = actions
 test_actions = actions
@@ -95,9 +110,9 @@ for act in actions:
 for k, v in N_frame_action_dict.items():
     action_frames[v] += k
 if cfg.H36M_DATA.P2D_DETECTOR == 'cpn' or cfg.H36M_DATA.P2D_DETECTOR == 'gt':
-    vis_score = pickle.load(open('../2D_3D_pose_setimation//data/score.pkl', 'rb'))
+    vis_score = pickle.load(open('./data/score.pkl', 'rb'))
 elif cfg.H36M_DATA.P2D_DETECTOR[:3] == 'ada':
-    vis_score = pickle.load(open('../2D_3D_pose_setimation//data/vis_ada.pkl', 'rb'))
+    vis_score = pickle.load(open('./data/vis_ada.pkl', 'rb'))
 
 
 def fetch(subjects, action_filter=None, parse_3d_poses=True, is_test=False, out_plus=False):
@@ -249,7 +264,13 @@ if EVAL and not cfg.TEST.TRIANGULATE:
     print(chk_filename)
     checkpoint = torch.load(chk_filename, map_location=lambda storage, loc: storage)
     print(checkpoint['model'])
-    model_checkpoint = checkpoint['model'] if 'best_model' not in checkpoint.keys() else checkpoint['best_model']
+    if 'best_model' not in checkpoint.keys():
+        print('best_model not in checkpoint')
+        model_checkpoint = checkpoint['model']
+    else:
+        print('best_model in checkpoint')
+        model_checkpoint = checkpoint['best_model']
+    #model_checkpoint = checkpoint['model']  if 'best_model' not in checkpoint.keys() else checkpoint['best_model']
     if model_checkpoint == None:
         model_checkpoint = checkpoint['model']
     train_checkpoint = model.state_dict()
@@ -311,26 +332,10 @@ if True:
         sub_act=subject_action)
 
     print('** Starting.')
-
-    # f = open('data/bone_priors_mean_h36m.json', )
-    # gt_bones_lens = json.load(f)
-    # for k in gt_bones_lens.keys():
-    #     gt_bones_lens[k] = torch.from_numpy(np.array(gt_bones_lens[k])).cuda()
-
-    gt_bones_lens = {}
-    for k in cfg.H36M_DATA.SUBJECTS_TRAIN:
-        if k=='S9':
-            s_bone_len = np.load('data/S9_bl_gt.npy')
-        if k=='S11':
-            s_bone_len = np.load('data/S11_bl_estimated.npy')
-        bones_lens = np.zeros((len(cfg.H36M_DATA.STRUCT_TRIANG_ORDER)))
-        i=0
-        for bon_name in cfg.H36M_DATA.STRUCT_TRIANG_ORDER:
-            # get position of bon_name in H36M_DATA.BONES_NAMES
-            idx = cfg.H36M_DATA.BONES_NAMES.index(bon_name)
-            bones_lens[idx]=s_bone_len[i]/1000
-            i+=1
-        gt_bones_lens[k] = torch.from_numpy(bones_lens).cuda()
+    f = open('data/bone_priors_mean_h36m.json', )
+    gt_bones_lens = json.load(f)
+    for k in gt_bones_lens.keys():
+        gt_bones_lens[k] = torch.from_numpy(np.array(gt_bones_lens[k])).cuda()
     bones = torch.from_numpy(np.array(cfg.H36M_DATA.BONES)).cuda()
     data_aug = DataAug(cfg, add_view=cfg.TRAIN.NUM_AUGMENT_VIEWS)
     iters = 0
@@ -388,13 +393,12 @@ if True:
             #    prj_3dgt_to_2d= HumanCam.p3d_im2d(pos_gt, sub_action, view_list)
             p3d_gt_ori = copy.deepcopy(pos_gt)
             p3d_root = copy.deepcopy(pos_gt[:, :, :1])  # (B,T, 1, 3, N)*
-            pos_gt[:, :, :1] = 0
-            p3d_gt_abs = copy.deepcopy(pos_gt)
+            # pos_gt[:, :, :1] = 0
             pos_gt = pos_gt - pos_gt[:, :, :1]
 
             # print("rel, view 0 : "+str(pos_gt[0,0,:, :, 0]))
             # print("rel, view 1 : "+str(pos_gt[0, 0, :, :, 1]))
-
+            p3d_gt_abs = pos_gt + p3d_root
             # print("abs, view 0 : "+str(p3d_gt_abs[0,0,:, :, 0]))
             # print("abs, view 1 : " + str(p3d_gt_abs[0, 0, :, :, 1]))
             # input()
@@ -444,7 +448,6 @@ if True:
             if summary_writer is not None:
                 summary_writer.add_scalar("bone_loss/iter", loss, iters)
 
-            out = out - out[:, :, :1]
             mpjpe_abs = mpjpe(out.permute(0, 1, 4, 2, 3).contiguous(), p3d_gt_abs[:, pad:pad + 1].permute(0, 1, 4, 2, 3).contiguous().to(out.device))
             if summary_writer is not None:
                 summary_writer.add_scalar("mpjpe/iter", mpjpe_abs, iters)
@@ -482,6 +485,12 @@ if True:
         id_traj = 0
         idx_eval = 0
         data_npy = {}
+        mpjpe_tab = []
+        bone_err_tab = []
+        data_npy_2d_from_3d = {}
+        data_npy_2d_gt = {}
+        failed_triangulations = 0
+        total_triangulations = 0
         with torch.no_grad():
             if not cfg.TEST.TRIANGULATE:
                 load_state(model, model_test)
@@ -586,6 +595,10 @@ if True:
                                         else:
                                             rotation = None
                                         confs, other_info = model_test(torch.cat((inp, inp_flip), dim=0), rotation)
+                                        confs = confs.permute(0, 1, 4, 2, 3).contiguous()
+
+                                        out, stats_sing_values, _ = HumanCam.p2d_cam3d_batch_with_root(
+                                            torch.cat((inp, inp_flip), dim=0)[:,:,:,:2,:], sub_action, views_idx, debug=False, use_struct_triang=True, lens=None)
                                         r_out = out
 
                                         out[B:, :, :, 0] *= -1
@@ -599,12 +612,15 @@ if True:
                                         else:
                                             rotation = None
                                         confs, other_info = model_test(inp, rotation)
-                                    confs = confs.permute(0, 1, 4, 2, 3).contiguous()
+                                        confs = confs.permute(0, 1, 4, 2, 3).contiguous()
 
-                                    out, stats_sing_values, _ = HumanCam.p2d_cam3d_batch_with_root(
-                                        h36_inp[:, pad:pad + 1][..., views_idx], sub_action, views_idx, debug=False,
-                                        confidences=confs[:, pad:pad + 1].permute(0, 1, 3, 4, 2).contiguous().to(
-                                            h36_inp.device))
+                                        # out, stats_sing_values, _ = HumanCam.p2d_cam3d_batch_with_root(
+                                        #     h36_inp[:, pad:pad + 1][..., views_idx], sub_action, views_idx, debug=False,
+                                        #     confidences=confs[:, pad:pad + 1].permute(0, 1, 3, 4, 2).contiguous().to(
+                                        #         h36_inp.device))
+                                        #out, stats_sing_values, _ = HumanCam.p2d_cam3d_batch_with_root(h36_inp[:, pad:pad + 1][..., views_idx], sub_action, views_idx, debug=False)
+                                        out, stats_sing_values, _ = HumanCam.p2d_cam3d_batch_with_root(h36_inp[:, pad:pad + 1][..., views_idx], sub_action, views_idx, debug=False, confidences=vis[:, pad:pad + 1, :, :, view_list])
+
 
                                     absolute_path_pred.append(out[:, :, :1])
                                     prj_out_abs_to_2d = HumanCam.p3d_im2d_batch(out, sub_action, views_idx,
@@ -612,16 +628,34 @@ if True:
                                                                                 gt_2d=inputs_2d_gt[:, pad:pad + 1, :,
                                                                                       :].to(out.device))
 
-                                    if id_eval == 0:
-                                        np.save(args.visu_path + "/inputs_2d_gt" + "_epoch_" + str(epoch),
-                                                inputs_2d_gt.detach().cpu().numpy())
-                                        np.save(args.visu_path + "/prj_out_abs_to_2d" + "_epoch_" + str(epoch),
-                                                prj_out_abs_to_2d.detach().cpu().numpy())
-                                        np.save(args.visu_path + "/inputs_3d_gt" + "_epoch_" + str(epoch),
-                                                inputs_3d_gt.detach().cpu().numpy())
-                                        np.save(args.visu_path + "/out" + "_epoch_" + str(epoch),
-                                                out.detach().cpu().numpy())
-                                    out = out - out[:, :, :1, :, :]
+                                    # if id_eval == 0:
+                                    #     np.save(args.visu_path + "/inputs_2d_gt" + "_epoch_" + str(epoch),
+                                    #             inputs_2d_gt.detach().cpu().numpy())
+                                    #     np.save(args.visu_path + "/prj_out_abs_to_2d" + "_epoch_" + str(epoch),
+                                    #             prj_out_abs_to_2d.detach().cpu().numpy())
+                                    #     np.save(args.visu_path + "/inputs_3d_gt" + "_epoch_" + str(epoch),
+                                    #             inputs_3d_gt.detach().cpu().numpy())
+                                    #     np.save(args.visu_path + "/out" + "_epoch_" + str(epoch),
+                                    #             out.detach().cpu().numpy())
+                                    pose_2D_from3D_gt = prj_out_abs_to_2d.permute(0, 2, 3, 4, 1).contiguous()
+                                    out = out - out[:, :, :1, :, :]  # + root
+                                    # for i, s_a in enumerate(sub_action):
+                                    #     subject = s_a[0]
+                                    #     action = s_a[1]
+                                    #     if subject not in data_npy.keys():
+                                    #         data_npy[subject] = {}
+                                    #     if action not in data_npy[subject].keys():
+                                    #         data_npy[subject][action] = []
+                                    #         for v in range(len(view_list)):
+                                    #             data_npy[subject][action].append([])
+                                    #     for v in range(len(view_list)):
+                                    #         # print(pose_2D_from3D_gt.shape)
+                                    #         curr_data = torch.cat([pose_2D_from3D_gt[i, 0, :, :, v].cpu(),
+                                    #                                inp[:, :, :, :2, :][i, pad, :, :, v].cpu(),
+                                    #                                out[i, 0, :, :, v].cpu(),
+                                    #                                inp[:, :, :, -1:, :][i, pad, :, :, v].cpu()], dim=-1)
+                                    #         data_npy[subject][action][v].append(curr_data)
+
                                     out = out.detach().cpu()
 
                                     if EVAL and args.vis_3d:
@@ -650,7 +684,7 @@ if True:
                                     #         fig = plt.figure("view " + str(idx_))
                                     #         ax = fig.add_subplot(projection='3d')
                                     #
-                                    #         print("p3d_gt_abs.shape : "+str(p3d_gt_abs.shape))
+                                    #         #print("p3d_gt_abs.shape : "+str(p3d_gt_abs.shape))
                                     #         x_out = out[0, 0, :, 0, idx_].detach().cpu().numpy()
                                     #         y_out = out[0, 0, :, 1, idx_].detach().cpu().numpy()
                                     #         z_out = out[0, 0, :, 2, idx_].detach().cpu().numpy()
@@ -661,7 +695,7 @@ if True:
                                     #         ax.scatter(x_gt, y_gt, z_gt, marker='o', color='r', label="gt 3D")
                                     #         ax.scatter(x_out, y_out, z_out, marker='+', color='g', label="pred 3D")
                                     #         ax.set_box_aspect((np.ptp(x_gt), np.ptp(y_gt), np.ptp(z_gt)))
-                                    #         plt.savefig("view " + str(v))
+                                    #         #plt.savefig("view " + str(v))
                                     #     plt.show()
 
                                     # build data npz
@@ -671,22 +705,22 @@ if True:
                                                                                       :].to(out.device))
 
                                     pose_2D_from3D_gt = prj_out_abs_to_2d.permute(0, 2, 3, 4, 1).contiguous()
-                                    for i, s_a in enumerate(sub_action):
-                                        subject = s_a[0]
-                                        action = s_a[1]
-                                        if subject not in data_npy.keys():
-                                            data_npy[subject] = {}
-                                        if action not in data_npy[subject].keys():
-                                            data_npy[subject][action] = []
-                                            for v in range(len(view_list)):
-                                                data_npy[subject][action].append([])
-                                        for v in range(len(view_list)):
-                                            # print(pose_2D_from3D_gt.shape)
-                                            curr_data = torch.cat([pose_2D_from3D_gt[i, 0, :, :, v].cpu(),
-                                                                   inp[:, :, :, :2, :][i, pad, :, :, v].cpu(),
-                                                                   out[i, 0, :, :, v].cpu(),
-                                                                   inp[:, :, :, -1:, :][i, pad, :, :, v].cpu()], dim=-1)
-                                            data_npy[subject][action][v].append(curr_data)
+                                    # for i, s_a in enumerate(sub_action):
+                                    #     subject = s_a[0]
+                                    #     action = s_a[1]
+                                    #     if subject not in data_npy.keys():
+                                    #         data_npy[subject] = {}
+                                    #     if action not in data_npy[subject].keys():
+                                    #         data_npy[subject][action] = []
+                                    #         for v in range(len(view_list)):
+                                    #             data_npy[subject][action].append([])
+                                    #     for v in range(len(view_list)):
+                                    #         # print(pose_2D_from3D_gt.shape)
+                                    #         curr_data = torch.cat([pose_2D_from3D_gt[i, 0, :, :, v].cpu(),
+                                    #                                inp[:, :, :, :2, :][i, pad, :, :, v].cpu(),
+                                    #                                out[i, 0, :, :, v].cpu(),
+                                    #                                inp[:, :, :, -1:, :][i, pad, :, :, v].cpu()], dim=-1)
+                                    #         data_npy[subject][action][v].append(curr_data)
 
                                     # detect nan in out and create a mask
                                     # mask = torch.isnan(out).any(dim=-1).any(dim=-1).any(dim=-1).any(dim=-1)
@@ -703,6 +737,17 @@ if True:
                                     bone_loss = 0
                                     for idx_, view_idx in enumerate(views_idx):
                                         loss_view_tmp = eval_metrc(cfg, out[..., idx_], inputs_3d_gt[..., view_idx])
+                                        mpjpe_tab.append(loss_view_tmp.item())
+                                        bones_err = bone_len_mae(gt_bones_lens,
+                                                                 out.permute(0, 1, 4, 2, 3).contiguous()[:, :, :],
+                                                                 bones.to(out.device),
+                                                                 cfg.H36M_DATA.SUBJECTS_TRAIN,
+                                                                 batch_subjects=sub_action, avg_ov_frames=False,
+                                                                 remove_fails_from_stats=args.remove_fails_from_stats)
+                                        failed_triangulations += torch.sum(torch.isnan(bones_err))
+                                        total_triangulations += bones_err.shape[0] * bones_err.shape[1] * \
+                                                                bones_err.shape[2] * bones_err.shape[3]
+                                        bone_err_tab.append(torch.mean(bones_err).item())
                                         # bone_pred_len = bone_losses(out[..., idx_:idx_+1].permute((0,1,4,2,3)).contiguous(), bones.cpu(), cfg.H36M_DATA.SUBJECTS_TEST, batch_subjects=sub_action, cfg=cfg)[0]
                                         # bone_error = torch.mean(torch.abs(torch.squeeze(bone_pred_len)-bones_means.cpu()))
                                         # bone_error = bone_len_loss(gt_bones_lens,
@@ -717,16 +762,30 @@ if True:
                                         #                                               inputs_3d_gt.shape[0]
                                     action_mpjpe[act][num_view - 1][-1] += loss * inputs_3d_gt.shape[0]
                                     # action_bone_error[act][num_view - 1][-1] += bone_loss * inputs_3d_gt.shape[0]
-                                if cfg.TRAIN.PREDICT_ROOT:
-                                    if id_traj == 0:
-                                        absolute_path_gt = torch.cat(absolute_path_gt, dim=0).detach().cpu().numpy()
-                                        absolute_path_pred = torch.cat(absolute_path_pred, dim=0).detach().cpu().numpy()
-                                        np.save(args.visu_path + "/absolute_path_pred" + "_epoch_" + str(epoch),
-                                                absolute_path_pred)
-                                        np.save(args.visu_path + "/absolute_path_gt" + "_epoch_" + str(epoch),
-                                                absolute_path_gt)
+                                # if cfg.TRAIN.PREDICT_ROOT:
+                                #     if id_traj == 0:
+                                #         absolute_path_gt = torch.cat(absolute_path_gt, dim=0).detach().cpu().numpy()
+                                #         absolute_path_pred = torch.cat(absolute_path_pred, dim=0).detach().cpu().numpy()
+                                #         np.save(args.visu_path + "/absolute_path_pred" + "_epoch_" + str(epoch),
+                                #                 absolute_path_pred)
+                                #         np.save(args.visu_path + "/absolute_path_gt" + "_epoch_" + str(epoch),
+                                #                 absolute_path_gt)
                                     id_traj += 1
-                print(view_list)
+                mpjpe_tab = np.array(mpjpe_tab)
+                overall_mpjpe = np.mean(mpjpe_tab)
+                #box plot of mpjpe with matplotlib
+                fig, ax = plt.subplots()
+                ax.boxplot(mpjpe_tab)
+                #violin plot of mpjpe with matplotlib
+                ax.violinplot(mpjpe_tab, showmeans=True, showmedians=True)
+                plt.show()
+
+                print("overall_mpjpe", overall_mpjpe)
+                input()
+                bone_err_tab = np.array(bone_err_tab)
+                overall_bone_err = np.mean(bone_err_tab)
+                print("overall_bone_err", overall_bone_err)
+                input()
                 n_sub = 0
                 n_act = []
                 for subject in data_npy.keys():
@@ -739,7 +798,21 @@ if True:
                 print("n_sub", n_sub)
                 print("n_act", n_act)
 
-                np.savez(args.visu_path + '/' + 'data_epoch_' + str(epoch) + ".npz", **data_npy)
+                np.savez("data/h36m_conf_pred_train_sub.npz", **data_npy)
+                # print(view_list)
+                # n_sub = 0
+                # n_act = []
+                # for subject in data_npy.keys():
+                #     n_sub += 1
+                #     n_act.append(0)
+                #     for action in data_npy[subject].keys():
+                #         n_act[-1] += 1
+                #         for v in range(len(view_list)):
+                #             data_npy[subject][action][v] = torch.stack(data_npy[subject][action][v], dim=0).numpy()
+                # print("n_sub", n_sub)
+                # print("n_act", n_act)
+
+                #np.savez(args.visu_path + '/' + 'data_epoch_' + str(epoch) + ".npz", **data_npy)
 
                 # for num_view in cfg.TEST.NUM_VIEWS:
                 #     tmp = [0] * (NUM_VIEW + 1)
@@ -794,9 +867,10 @@ if True:
                     print('avg:', end='                        ')
                     for i in range(NUM_VIEW):
                         print('view_{}: {:.3f}'.format(i, tmp[i] / len(action_frames)), end='    ')
-                        summary_writer.add_scalar(
-                            "test_mpjpe_t{}_n_view_{}_view_{}/epoch".format(t_len, num_view, i),
-                            tmp[i] / len(action_frames), epoch)
+                        if summary_writer is not None:
+                            summary_writer.add_scalar(
+                                "test_mpjpe_t{}_n_view_{}_view_{}/epoch".format(t_len, num_view, i),
+                                tmp[i] / len(action_frames), epoch)
                     print('avg_all   : {:.3f}'.format(tmp[-1] / len(action_frames)))
 
                     if summary_writer is not None:

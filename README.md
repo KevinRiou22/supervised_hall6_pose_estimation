@@ -1,6 +1,7 @@
 # Hall6 data
 ## downlod the data
-
+create a folder named "data" in the root directory of the project, and download the data from the following link (dwd everything in the "data" folder):
+https://uncloud.univ-nantes.fr/index.php/s/XP2cqPccBEdS3qC
 ## triangulate 3D poses from 2D poses
 ```bash
 python triangulate_hall6.py --cfg ./cfg/submit/cfg_triangulate_16_cams.yaml  --triang_out_name triangulated_3D_16_cams

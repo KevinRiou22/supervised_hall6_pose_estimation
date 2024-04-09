@@ -536,7 +536,10 @@ def get_bone_prior_loss(out, bones, mean_bones_len_prior, std_bones_len_prior):
     print("bones_lens[0] : ", bones_lens[0])
     mse_bone_prior = torch.square(bones_lens-mean_bones_len_prior)
     mse_bone_prior = torch.minimum(mse_bone_prior, torch.ones_like(mse_bone_prior ))
-    bone_prior_loss = -(1/(2*std_bones_len_prior))*(mse_bone_prior)#*#-(3/2)*torch.log(2*math.pi)-3*torch.log(std_bones_len_prior)
+    if std_bones_len_prior > 0:
+        bone_prior_loss = -(1/(2*std_bones_len_prior))*(mse_bone_prior)#*#-(3/2)*torch.log(2*math.pi)-3*torch.log(std_bones_len_prior)
+    else:
+        bone_prior_loss = -mse_bone_prior
     #bone_prior_loss = torch.minimum(-1*bone_prior_loss, torch.ones_like(bone_prior_loss))
     #max_val = 1/(2*torch.min(std_bones_len_prior))
     return -1*torch.mean(bone_prior_loss, dim=(0,1,3))#/max_val
@@ -764,8 +767,11 @@ def bone_len_mae(bone_priors, out, bones, subjects_, batch_subjects=None, avg_ov
             mae=torch.abs(prior_len.to(out.device) - op_bones_lens)
             #get values where mae>prior_len/2
             # print(prior_len)
+            # print(op_bones_lens)
             # print(mae)
             # input()
+            failed_triangulations = torch.sum(torch.isnan(mae))
+            print(failed_triangulations)
             if remove_fails_from_stats:
                 mae = torch.where(mae > prior_len/2, torch.zeros_like(mae)*float('nan'), mae)
                 print("removed fails from stats")

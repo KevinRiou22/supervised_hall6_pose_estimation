@@ -150,6 +150,7 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
 
             for frame_id in range(n_frames):
                 # save image of view index 0 and 1
+                #fig1, axs = plt.subplots(4, 4)
                 fig1, axs = plt.subplots(4, 4)
                 # set size of the figure
                 fig1.set_size_inches(18.5, 10.5)

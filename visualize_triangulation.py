@@ -41,7 +41,7 @@ def white_balance(img):
     result = cv2.cvtColor(result, cv2.COLOR_LAB2BGR)
     return result
 
-def read_video_cv2(video_path, frame_range=[0, 10]):
+def read_video_cv2(video_path, frame_range=[0, 10], correct_white_balance=False):
     cap = cv2.VideoCapture(video_path)
     all = []
     i = 0
@@ -52,7 +52,9 @@ def read_video_cv2(video_path, frame_range=[0, 10]):
             if i>=frame_range[0] and i<frame_range[1]:
                 frame = frame[:, :, ::-1]
                 arr = np.array(frame)
-                all.append(white_balance(arr))
+                if correct_white_balance:
+                    arr = white_balance(arr)
+                all.append(arr)
             i += 1
         else:
              break
@@ -128,6 +130,8 @@ frame = int(args.src_frame)
 op5_task1_ex2 = []
 op1_task1_ex1 = []
 
+n_columns_plot=2
+n_lines_plot=4
 #enumerate data_npy, keys and values
 for i, (k_s, v_s) in enumerate(data_npy.items()):
     print(k_s)
@@ -142,20 +146,26 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
 
         #for cam in cams:
         for idx, view_idx in enumerate(cfg.HALL6_DATA.TEST_CAMERAS):
+            correct_white = True
+            if "r" in cams[view_idx] or "l" in cams[view_idx]:
+                correct_white = False
             cam = cams[view_idx]
-            cams_videos.append(read_video_cv2('data/images/{}/{}/{}/{}/video.avi'.format(k_a[0], operator_str, k_a[1], cam), [frame,frame+1]))
+            cams_videos.append(read_video_cv2('data/images/{}/{}/{}/{}/video.avi'.format(k_a[0], operator_str, k_a[1], cam), [frame,frame+1], correct_white_balance=correct_white))
         print(k_a)
 
 
         # save image of view index 0 and 1
-        fig1, axs = plt.subplots(4, 4)
+        fig1, axs = plt.subplots(n_lines_plot, n_columns_plot)
         # set size of the figure
         fig1.set_size_inches(18.5, 10.5)
         # remove x and y ticks and labels
         for ax in axs.flat:
             ax.set(xticks=[], yticks=[])
         # remove spacings between subplots
-        plt.subplots_adjust(wspace=-0.3)
+        if n_columns_plot==2:
+            plt.subplots_adjust(wspace=-0.7)
+        else:
+            plt.subplots_adjust(wspace=-0.3)
 
         #fig2, axs_3D = plt.subplots(4, 4)
         # # remove x and y ticks and labels
@@ -172,14 +182,14 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
             #axs[i // 4, i % 4].set_title(cams[view_idx]+" / "+str(idx))
             conf_2D = v_a[idx][frame, :, -1]
             print("conf_2D : " + str(conf_2D))
-            axs[i // 4, i % 4].set_title("Id: {}, 2DConf : {:.1f}, DynConf : {}".format(str(idx), np.mean(conf_2D), "?"), fontsize=12, fontweight='bold')
+            axs[i // n_columns_plot, i % n_columns_plot].set_title("Id: {}, 2DConf : {:.1f}".format(str(idx), np.mean(conf_2D)), fontsize=12, fontweight='bold')
             first_frame = cams_videos[i][0]
             # plot first frame in subplot i
             if "r" in cams[view_idx] or "l" in cams[view_idx]:
-                axs[i // 4, i % 4].imshow(first_frame)
+                axs[i // n_columns_plot, i % n_columns_plot].imshow(first_frame)
             else:
                 # plot frame in subplot i with a larger size
-                axs[i // 4, i % 4].imshow(first_frame)
+                axs[i // n_columns_plot, i % n_columns_plot].imshow(first_frame)
                 #axs[i // 4, i % 4].imshow(cv2.resize(first_frame, (1920, 1080)))
 
 
@@ -203,8 +213,8 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
                 h_3D_to_2D = h_3D_to_2D * 2048/2 + 2048/2
                 w_3D_to_2D = w_3D_to_2D * 2048/2 + 2048/2
 
-            axs[i // 4, i % 4].scatter(h_inp_2d, w_inp_2d, color='r', marker='.', label="input_2d")
-            axs[i // 4, i % 4].scatter(h_3D_to_2D, w_3D_to_2D, color='g', marker='+', label="prj_3dgt_abs_to_2d")
+            axs[i // n_columns_plot, i % n_columns_plot].scatter(h_inp_2d, w_inp_2d, color='r', marker='.', label="input_2d")
+            axs[i // n_columns_plot, i % n_columns_plot].scatter(h_3D_to_2D, w_3D_to_2D, color='g', marker='+', label="prj_3dgt_abs_to_2d")
 
             x_out = v_a[idx][frame, :, 4]
             y_out = v_a[idx][frame, :, 5]
@@ -217,7 +227,7 @@ for i, (k_s, v_s) in enumerate(data_npy.items()):
                 #set all axis limits to [-4, 4]
                 axs_3D.set_xlim3d([-1, 1])
                 axs_3D.set_ylim3d([-1, 1])
-                axs_3D.set_zlim3d([3, 5])
+                axs_3D.set_zlim3d([3-5, 5-5])
 
             i += 1
         #save fig1 without border in image

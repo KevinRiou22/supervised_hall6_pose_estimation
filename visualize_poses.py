@@ -137,7 +137,6 @@ for idx, view_idx in enumerate(cfg.HALL6_DATA.TEST_CAMERAS):
     x_out = out[0, 0, :, 0, idx]
     y_out = out[0, 0, :, 1, idx]
     z_out = out[0, 0, :, 2, idx]
-
     x_gt = inputs_3d_gt[0, 0, :, 0, view_idx]
     y_gt = inputs_3d_gt[0, 0, :, 1, view_idx]
     z_gt = inputs_3d_gt[0, 0, :, 2, view_idx]
