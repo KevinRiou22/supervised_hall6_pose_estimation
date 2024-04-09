@@ -18,11 +18,21 @@ triang_out_name: containing the triangulated 3D poses, as well as the input 2D p
 python evaluate_triangulation.py --cfg ./cfg/submit/cfg_triangulate_16_cams.yaml --data_name triangulated_3D_16_cams
 ``` 
 
-## train 3D pose estimators on the data (ongoing work)
+## Train the confidence prediction models
 ### create experiment dirs
 ```bash
 sh create_exp_dirs.sh
 ```
+
+### train the confidence prediction model
+you can find the commands to launch the various trainings of the confidence prediction models in the folders
+cfg/submit/conf_pred_*/
+
+the respective commands are located at the end of the slurm_cmd files located in the above mentioned folders.
+
+
+## train 3D pose estimators on the data (ongoing work)
+
 
 ### train the baseline 1
 ```bash
