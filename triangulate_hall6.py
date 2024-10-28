@@ -89,6 +89,7 @@ my_data = np.load(my_data_pth, allow_pickle=True)
 my_data = dict(my_data)
 actions = []
 N_frame_action_dict = {}
+total_frames = 0
 for sub in operators:
     keypoints['S{}'.format(sub)] = my_data['S{}'.format(sub)].item()
     ############ coco to h36m ######################
@@ -124,8 +125,10 @@ for sub in operators:
                 actions.append('task{}_example{}'.format(task, example))
                 n_frame_current_ex = keypoints_new['S{}'.format(sub)]['task{}_example{}'.format(task, example)][i].shape[0]
                 N_frame_action_dict[n_frame_current_ex]='task{}_example{}'.format(task, example)
+                total_frames += n_frame_current_ex
         t_i += 1
-
+print('Total frames:', total_frames)
+input()
 # remove duplicate actions
 actions = list(set(actions))
 

@@ -78,7 +78,6 @@ for sub in operators:
     ############ coco to h36m ######################
     keypoints_new['S{}'.format(sub)] = copy.deepcopy(my_data['S{}'.format(sub)].item())
     #remove [S4][task1_example6] and [S4][task3_example6] from keypoints_new dict
-
     t_i=0
     for task in tasks:
         for example in examples:
@@ -303,10 +302,9 @@ if True:
     last_loss = 0
     #########
     import json
-
-    #f = open('bone_priors_mean.json', )
+        #f = open('bone_priors_mean.json', )
     f = open('data/bones_length_hall6_2d_pose_structure.json', )
-    gt_bones_lens = json.load(f)
+    bones_prior_dict = json.load(f)
     bone_names_h36m = cfg.HALL6_DATA.BONES_NAMES
     bones_h36m = cfg.HALL6_DATA.BONES
     bones_means_ = []
@@ -314,8 +312,12 @@ if True:
     count_subj=0
     symmetry_bones = [[],[]]
     bone_names_in_bones_list = []
-    for sub_id in gt_bones_lens.keys():
-        sub_processed = gt_bones_lens[sub_id]['h36m']
+    gt_bones_lens={}
+    processed_lens = torch.from_numpy(np.load("data/bones_length_hall6_triang_measure.npy"))
+
+    for sub_id in bones_prior_dict.keys():
+        sub_gt_bones_lens = []
+        sub_processed = bones_prior_dict[sub_id]['h36m']
         bone_id = 0
         bones_means_.append([])
         bone_id_in_bones_list = 0
@@ -328,14 +330,59 @@ if True:
                 if count_subj == 0:
                     bones.append(bones_h36m[bone_id])
                     bone_names_in_bones_list.append(bone_name)
+
+                    if bone_id in cfg.HALL6_DATA.BONES_SYMMETRY[0]:
+                        symmetry_bones[0].append(bone_id_in_bones_list)
+                    if bone_id in cfg.HALL6_DATA.BONES_SYMMETRY[1]:
+                        symmetry_bones[1].append(bone_id_in_bones_list)
+                bone_id_in_bones_list += 1
+            if bone_name in ['r_ear_r_eye', 'l_ear_l_eye', 'r_eye_nose', 'l_eye_nose']:
+                bones_means_[-1].append(0)
+                if count_subj == 0:
+                    bones.append(bones_h36m[bone_id])
+                    bone_names_in_bones_list.append(bone_name)
                     if bone_id in cfg.HALL6_DATA.BONES_SYMMETRY[0]:
                         symmetry_bones[0].append(bone_id_in_bones_list)
                     if bone_id in cfg.HALL6_DATA.BONES_SYMMETRY[1]:
                         symmetry_bones[1].append(bone_id_in_bones_list)
                 bone_id_in_bones_list += 1
             bone_id +=1
+        gt_bones_lens[sub_id] = processed_lens[count_subj]
         count_subj +=1
+
     cfg.HALL6_DATA.BONES_SYMMETRY = symmetry_bones
+    # #f = open('bone_priors_mean.json', )
+    # f = open('data/bones_length_hall6_2d_pose_structure.json', )
+    # gt_bones_lens = json.load(f)
+    # bone_names_h36m = cfg.HALL6_DATA.BONES_NAMES
+    # bones_h36m = cfg.HALL6_DATA.BONES
+    # bones_means_ = []
+    # bones = []
+    # count_subj=0
+    # symmetry_bones = [[],[]]
+    # bone_names_in_bones_list = []
+    # for sub_id in gt_bones_lens.keys():
+    #     sub_processed = gt_bones_lens[sub_id]['h36m']
+    #     bone_id = 0
+    #     bones_means_.append([])
+    #     bone_id_in_bones_list = 0
+    #     for bone_name in bone_names_h36m:
+    #         if bone_name in ['Head', 'LeftShoulder', 'RightShoulder']:
+    #             bone_id += 1
+    #             continue
+    #         if bone_name in sub_processed.keys():
+    #             bones_means_[-1].append(sub_processed[bone_name]/100)
+    #             if count_subj == 0:
+    #                 bones.append(bones_h36m[bone_id])
+    #                 bone_names_in_bones_list.append(bone_name)
+    #                 if bone_id in cfg.HALL6_DATA.BONES_SYMMETRY[0]:
+    #                     symmetry_bones[0].append(bone_id_in_bones_list)
+    #                 if bone_id in cfg.HALL6_DATA.BONES_SYMMETRY[1]:
+    #                     symmetry_bones[1].append(bone_id_in_bones_list)
+    #             bone_id_in_bones_list += 1
+    #         bone_id +=1
+    #     count_subj +=1
+    # cfg.HALL6_DATA.BONES_SYMMETRY = symmetry_bones
     print("bone_names_in_bones_list : " + str(bone_names_in_bones_list))
     print("cfg.HALL6_DATA.BONES_SYMMETRY : " + str(cfg.HALL6_DATA.BONES_SYMMETRY))
     torch.from_numpy(np.array(bones_means_)).cuda()
@@ -710,7 +757,7 @@ if True:
                                     bone_loss = 0
                                     for idx_, view_idx in enumerate(views_idx):
                                         loss_view_tmp = eval_metrc(cfg, out[..., idx_], inputs_3d_gt[..., view_idx])
-                                        bone_error = per_participant_bone_len_loss = bone_len_loss(gt_bones_lens,out.permute(0, 1, 4, 2, 3).contiguous(), bones.to(out.device),cfg.HALL6_DATA.SUBJECTS_TRAIN,batch_subjects=sub_action,cfg=cfg,std_bones_len_prior=bones_stds.to(out.device))
+                                        bone_error = per_participant_bone_len_loss = bone_len_loss(gt_bones_lens,out.permute(0, 1, 4, 2, 3).contiguous(), bones.to(out.device),cfg.HALL6_DATA.SUBJECTS_TEST,batch_subjects=sub_action,cfg=cfg,std_bones_len_prior=bones_stds.to(out.device))
 
                                         loss += loss_view_tmp.item()
                                         bone_loss += bone_error.item()
