@@ -69,8 +69,11 @@ This tool is used to annotate the actions in the videos.
 Since the ergonomic variations where all planned in advance for each participants, the matching of the actions with their ergonomic variations is automatic once the actions are annotated.
 
 subject can have 1-5 values
+
 tasks can have 1-3
+
 for task 1, examples can be 1-15
+
 for tasks 2 and 3, examples can be 1-6
 
 Use the right arrow key to move forward in the trajectory, and left to move backwards.
