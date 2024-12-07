@@ -63,7 +63,7 @@ We also provide the annotation tool that allowed to annotate sub-trajectories wi
 
 To use this tool, launch the following command:
 ```bash 
-    python annotate_trajectories.py --path_poses ./data/ --poses_filename  triangulate_16_cams.npz --subject 1 --task 1 --example 1 --path_labels ./data/
+python annotate_trajectories.py --path_poses ./data/ --poses_filename  triangulate_16_cams.npz --subject 1 --task 1 --example 1 --path_labels ./data/
 ```
 This tool is used to annotate the actions in the videos.
 Since the ergonomic variations where all planned in advance for each participants, the matching of the actions with their ergonomic variations is automatic once the actions are annotated.

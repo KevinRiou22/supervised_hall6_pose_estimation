@@ -263,3 +263,6 @@ wrapt==1.15.0
 xacro==1.14.16
 zarr==2.16.1
 zipp==3.8.1
+fastdtw
+pynput
+
